@@ -2,10 +2,14 @@
 // CARBONMIND AI — Middleware
 // =============================================================================
 // Route protection + security headers for all requests.
+// Initialized purely with Edge-compatible authConfig to support Edge runtime.
 // =============================================================================
 
-import { auth } from '@/lib/auth';
+import NextAuth from 'next-auth';
+import { authConfig } from '@/lib/auth.config';
 import { NextResponse } from 'next/server';
+
+const { auth } = NextAuth(authConfig);
 
 const publicRoutes = ['/', '/login', '/register'];
 const publicPrefixes = ['/api/auth', '/_next', '/favicon.ico'];
