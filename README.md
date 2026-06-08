@@ -4,73 +4,55 @@
 
 ---
 
-## Architecture Overview
+## 1. Chosen Vertical & Persona
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        A[Next.js 15 App Router] --> B[React Server Components]
-        A --> C[Client Components + TanStack Query]
-        A --> D[shadcn/ui + Tailwind CSS]
-    end
-
-    subgraph "API Layer"
-        E[Server Actions] --> F[Zod Validation]
-        G[API Routes] --> F
-        F --> H[Rate Limiter]
-        H --> I[Auth Middleware - NextAuth v5]
-    end
-
-    subgraph "Business Logic"
-        J[Carbon Calculator Engine]
-        K[Forecasting Engine]
-        L[What-If Simulator]
-        M[AI Coach - OpenAI]
-        N[OCR Pipeline - Tesseract.js]
-        O[Gamification Engine]
-        P[Challenge Generator]
-      end
-
-    subgraph "Data Layer"
-        Q[(PostgreSQL)]
-        R[Prisma ORM]
-        S[Emission Factor DB]
-    end
-
-    I --> J & K & L & M & N & O & P
-    J & K & L & M & N & O & P --> R --> Q
-```
+- **Vertical**: Sustainability & Climate Action Tech (Carbon Ledger & AI Assistant).
+- **Digital Twin Persona**: The assistant acts as the user's "Climate Digital Twin". It analyzes the user's historical logging data to create a custom "Carbon DNA" profile, forecasts future emissions, provides a sandboxed "What-If" simulator for lifestyle shifts, and acts as an intelligent virtual coach using dynamic recommendations.
 
 ---
 
-## Core Features
+## 2. Approach & Logic
 
-1. **Carbon DNA Profile**: Interactive pie charts demonstrating emission percentages across Transport, Food, Energy, and Shopping.
-2. **What-If Simulator**: Scenario-builder to calculate potential monthly and yearly savings from lifestyle changes (e.g. car commute to bicycle).
-3. **Forecasting Engine**: Weighted Moving Average and seasonal decomposition algorithm to project 30, 60, and 90-day emission curves.
-4. **AI Climate Coach**: Conversation assistant giving real-time, context-aware suggestions linked to Carbon DNA data.
-5. **Scan receipt OCR**: Tesseract OCR file processor that automatically reads utility bills or fuel receipts to compute carbon impact.
-6. **Gamified Challenges**: User levels (Green Starter to Net Zero Hero), streaks, and lockable achievements.
-7. **Regional Leaderboards**: Competition interface with codes to create or join Alliance Teams.
-8. **Weekly PDF Report**: Custom styled reports with full client export using jsPDF and html2canvas.
+The system utilizes modular architecture dividing frontend display layers from backend transaction layers and core calculation engines:
+
+- **Carbon DNA Engine**: Aggregates manual or OCR-extracted activities across 4 core sectors (Transport, Food, Energy, Shopping). It calculates percentage distribution and flags the dominant emission sector.
+- **Forecasting Engine (Weighted Moving Average + Seasonal Decomposition)**:
+  - Takes historical activity data.
+  - Computes a WMA where recent logs carry higher weight.
+  - Applies a seasonal multiplier (day-of-week variation) to identify routine weekly footprint peaks.
+  - Computes linear trend slopes to project 30, 60, and 90-day futures with widening confidence bounds (representing prediction entropy).
+- **What-If Simulator Engine**: Connects to the profile data to simulate lifestyle shifts (e.g. replacing gasoline commutes with cycling or bus) on a daily, weekly, or monthly frequency, displaying comparative bar charts showing Current vs Projected footprints.
+- **OCR Pipeline (Tesseract.js)**: Runs in the browser to extract text from uploads, runs regular expression matches to capture power consumption (kWh) or fuel spent, categorizes the document type, and suggests carbon logging metrics.
+- **Gamification Engine**: Enforces streaks and rank progression levels based on cumulative experience points earned through logging or challenge completions.
 
 ---
 
-## Database Schema (Prisma)
+## 3. How the Solution Works
 
-- **User**: Authentication details, gamification points, levels, and active streaks.
-- **CarbonProfile**: Aggregated DNA totals.
-- **CarbonActivity**: Logged activity categories, subcategories, units, and confidence indices.
-- **AIInsight**: Recommendations and Warnings.
-- **Challenge**: Reduction challenges.
-- **Achievement**: Badge locker.
-- **Team & TeamMember**: Community alliances.
+1. **User Sign Up & Login**: Secure credentials validation with NextAuth v5 session tokens.
+2. **Dashboard Overview**: Fetches a single-transaction payload containing Carbon Score (0-100 scale vs global baseline), DNA charts, forecasting values, and active challenges.
+3. **Log Activity (DNA)**: Users enter travel distance, electricity consumed, or retail spend. The calculator processes EPA emission multipliers and updates the user's Carbon DNA.
+4. **Receipt Scan**: Drag and drop a utility bill. Tesseract reads text, extracts details, estimates emissions, and logs it directly.
+5. **AI Climate Coach**: A dynamic chat interface where users can ask questions (e.g., about diet footprint changes) and receive suggestions.
+6. **PDF Reporting**: Users click "Export Weekly PDF" to capture report widgets and download a clean carbon ledger.
+
+---
+
+## 4. Key Assumptions Made
+
+- **Baseline Averages**: The global monthly baseline is assumed to be **391 kg CO₂e** (equivalent to ~4.7 tons CO₂e per year) for score comparisons.
+- **EPA Factors**: Standard GHG Protocol multipliers are assumed:
+  - Gasoline cars: 0.21 kg CO₂e/km.
+  - Bus: 0.089 kg CO₂e/km.
+  - Electricity grid average: 0.42 kg CO₂e/kWh.
+  - Beef production: 27 kg CO₂e/kg.
+- **OCR Completeness**: Receipt scan logic assumes legible text is provided to successfully match regex parameters.
 
 ---
 
 ## Technology Stack
 
-- **Frontend**: Next.js 15 App Router, TypeScript, Tailwind CSS, Recharts
+- **Frontend**: Next.js 15 (Turbopack), TypeScript, Tailwind CSS, Recharts
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: NextAuth v5 (Auth.js)
 - **OCR Engine**: Tesseract.js
