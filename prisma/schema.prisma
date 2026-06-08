@@ -1,0 +1,282 @@
+// =============================================================================
+// Prisma Schema — CARBONMIND AI
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── NextAuth Models ──────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ── Application Models ───────────────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime? @map("email_verified")
+  hashedPassword String?   @map("hashed_password")
+  image          String?
+  level          String    @default("green_starter")
+  totalPoints    Int       @default(0) @map("total_points")
+  currentStreak  Int       @default(0) @map("current_streak")
+  longestStreak  Int       @default(0) @map("longest_streak")
+  lastActiveDate DateTime? @map("last_active_date")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  accounts       Account[]
+  sessions       Session[]
+  carbonProfile  CarbonProfile?
+  activities     CarbonActivity[]
+  insights       AIInsight[]
+  challenges     Challenge[]
+  achievements   Achievement[]
+  weeklyReports  WeeklyReport[]
+  scanResults    ScanResult[]
+  chatMessages   ChatMessage[]
+  teamMembers    TeamMember[]
+  createdTeams   Team[]           @relation("TeamCreator")
+
+  @@index([email])
+  @@map("users")
+}
+
+model CarbonProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  totalEmissions  Float    @default(0) @map("total_emissions")
+  transportPct    Float    @default(0) @map("transport_pct")
+  foodPct         Float    @default(0) @map("food_pct")
+  shoppingPct     Float    @default(0) @map("shopping_pct")
+  energyPct       Float    @default(0) @map("energy_pct")
+  monthlyAverage  Float    @default(0) @map("monthly_average")
+  preferences     Json     @default("{}")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("carbon_profiles")
+}
+
+model CarbonActivity {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  category     String
+  subcategory  String
+  value        Float
+  unit         String
+  emissionKg   Float    @map("emission_kg")
+  source       String   @default("manual") // manual | ocr | ai_estimated
+  confidence   Float    @default(1.0)
+  metadata     Json     @default("{}")
+  activityDate DateTime @map("activity_date")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, activityDate])
+  @@index([userId, category])
+  @@index([activityDate])
+  @@map("carbon_activities")
+}
+
+model AIInsight {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  type       String   // recommendation | warning | achievement | trend
+  title      String
+  content    String   @db.Text
+  impactKg   Float    @default(0) @map("impact_kg")
+  confidence Float    @default(0)
+  difficulty String   @default("medium")
+  dismissed  Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dismissed])
+  @@index([userId, createdAt])
+  @@map("ai_insights")
+}
+
+model Challenge {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  title           String
+  description     String   @db.Text
+  category        String
+  targetReduction Float    @map("target_reduction")
+  points          Int      @default(50)
+  status          String   @default("active") // active | completed | failed | expired
+  progress        Float    @default(0)
+  startDate       DateTime @map("start_date")
+  endDate         DateTime @map("end_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([endDate])
+  @@map("challenges")
+}
+
+model Achievement {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  badge         String
+  title         String
+  description   String
+  pointsAwarded Int      @default(0) @map("points_awarded")
+  earnedAt      DateTime @default(now()) @map("earned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badge])
+  @@index([userId])
+  @@map("achievements")
+}
+
+model WeeklyReport {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  totalEmissions  Float    @map("total_emissions")
+  categoryBreakdown Json   @map("category_breakdown")
+  trends          Json     @default("[]")
+  predictions     Json     @default("[]")
+  achievements    Json     @default("[]")
+  recommendations Json     @default("[]")
+  weekStart       DateTime @map("week_start")
+  weekEnd         DateTime @map("week_end")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, weekStart])
+  @@map("weekly_reports")
+}
+
+model ScanResult {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  documentType      String   @map("document_type")
+  rawText           String   @db.Text @map("raw_text")
+  extractedData     Json     @map("extracted_data")
+  confidence        Float    @default(0)
+  estimatedEmissions Float   @default(0) @map("estimated_emissions")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("scan_results")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  role      String   // user | assistant | system
+  content   String   @db.Text
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("chat_messages")
+}
+
+// ── Community Models ─────────────────────────────────────────────────────────
+
+model Team {
+  id              String   @id @default(cuid())
+  name            String
+  code            String   @unique
+  creatorId       String   @map("creator_id")
+  totalReduction  Float    @default(0) @map("total_reduction")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  creator    User           @relation("TeamCreator", fields: [creatorId], references: [id])
+  members    TeamMember[]
+  challenges TeamChallenge[]
+
+  @@index([code])
+  @@map("teams")
+}
+
+model TeamMember {
+  id                    String   @id @default(cuid())
+  teamId                String   @map("team_id")
+  userId                String   @map("user_id")
+  reduction             Float    @default(0)
+  challengesCompleted   Int      @default(0) @map("challenges_completed")
+  joinedAt              DateTime @default(now()) @map("joined_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model TeamChallenge {
+  id              String   @id @default(cuid())
+  teamId          String   @map("team_id")
+  title           String
+  description     String   @db.Text
+  targetReduction Float    @map("target_reduction")
+  status          String   @default("active")
+  startDate       DateTime @map("start_date")
+  endDate         DateTime @map("end_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, status])
+  @@map("team_challenges")
+}
