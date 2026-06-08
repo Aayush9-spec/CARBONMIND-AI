@@ -2,9 +2,10 @@
 # Dockerfile — CARBONMIND AI
 # =============================================================================
 # Multi-stage build for deploying Next.js application to Google Cloud Run.
+# Uses Node 20 as required by Next 15/16 and Prisma 7.
 # =============================================================================
 
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
