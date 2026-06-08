@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CarbonMind AI
+
+> **Your Personal Climate Digital Twin** — An AI-powered Carbon Footprint Awareness Platform designed to help users calculate, simulate, forecast, and reduce their greenhouse gas emissions.
+
+---
+
+## Architecture Overview
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        A[Next.js 15 App Router] --> B[React Server Components]
+        A --> C[Client Components + TanStack Query]
+        A --> D[shadcn/ui + Tailwind CSS]
+    end
+
+    subgraph "API Layer"
+        E[Server Actions] --> F[Zod Validation]
+        G[API Routes] --> F
+        F --> H[Rate Limiter]
+        H --> I[Auth Middleware - NextAuth v5]
+    end
+
+    subgraph "Business Logic"
+        J[Carbon Calculator Engine]
+        K[Forecasting Engine]
+        L[What-If Simulator]
+        M[AI Coach - OpenAI]
+        N[OCR Pipeline - Tesseract.js]
+        O[Gamification Engine]
+        P[Challenge Generator]
+      end
+
+    subgraph "Data Layer"
+        Q[(PostgreSQL)]
+        R[Prisma ORM]
+        S[Emission Factor DB]
+    end
+
+    I --> J & K & L & M & N & O & P
+    J & K & L & M & N & O & P --> R --> Q
+```
+
+---
+
+## Core Features
+
+1. **Carbon DNA Profile**: Interactive pie charts demonstrating emission percentages across Transport, Food, Energy, and Shopping.
+2. **What-If Simulator**: Scenario-builder to calculate potential monthly and yearly savings from lifestyle changes (e.g. car commute to bicycle).
+3. **Forecasting Engine**: Weighted Moving Average and seasonal decomposition algorithm to project 30, 60, and 90-day emission curves.
+4. **AI Climate Coach**: Conversation assistant giving real-time, context-aware suggestions linked to Carbon DNA data.
+5. **Scan receipt OCR**: Tesseract OCR file processor that automatically reads utility bills or fuel receipts to compute carbon impact.
+6. **Gamified Challenges**: User levels (Green Starter to Net Zero Hero), streaks, and lockable achievements.
+7. **Regional Leaderboards**: Competition interface with codes to create or join Alliance Teams.
+8. **Weekly PDF Report**: Custom styled reports with full client export using jsPDF and html2canvas.
+
+---
+
+## Database Schema (Prisma)
+
+- **User**: Authentication details, gamification points, levels, and active streaks.
+- **CarbonProfile**: Aggregated DNA totals.
+- **CarbonActivity**: Logged activity categories, subcategories, units, and confidence indices.
+- **AIInsight**: Recommendations and Warnings.
+- **Challenge**: Reduction challenges.
+- **Achievement**: Badge locker.
+- **Team & TeamMember**: Community alliances.
+
+---
+
+## Technology Stack
+
+- **Frontend**: Next.js 15 App Router, TypeScript, Tailwind CSS, Recharts
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: NextAuth v5 (Auth.js)
+- **OCR Engine**: Tesseract.js
+- **PDF Generation**: jsPDF, html2canvas
+
+---
 
 ## Getting Started
 
-First, run the development server:
-
+### 1. Configure Environment Variables
+Create a `.env` file from the example template:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set the variables inside `.env`:
+```
+DATABASE_URL="postgresql://user:password@localhost:5432/carbonmind"
+AUTH_SECRET="your-32-character-secret"
+NEXTAUTH_URL="http://localhost:3000"
+OPENAI_API_KEY="your-openai-api-key"
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Generate Prisma Client
+```bash
+npx prisma generate
+```
 
-## Learn More
+### 4. Setup Database
+Apply migrations or push the schema to your development database:
+```bash
+npx prisma db push
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 5. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the application.
