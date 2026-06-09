@@ -74,6 +74,10 @@ export async function registerUser(formData: FormData): Promise<AuthResult> {
 
     return { success: true };
   } catch (error) {
+    // Rethrow Next.js internal redirect errors
+    if (error && typeof error === 'object' && ('digest' in error || (error as Error).message === 'NEXT_REDIRECT')) {
+      throw error;
+    }
     console.error('Registration error:', error);
     return { success: false, error: 'Registration failed. Please try again.' };
   }
@@ -105,6 +109,10 @@ export async function loginUser(formData: FormData): Promise<AuthResult> {
 
     return { success: true };
   } catch (error: unknown) {
+    // Rethrow Next.js internal redirect errors
+    if (error && typeof error === 'object' && ('digest' in error || (error as Error).message === 'NEXT_REDIRECT')) {
+      throw error;
+    }
     // NextAuth throws specific errors for auth failures
     if (error && typeof error === 'object' && 'type' in error) {
       if ((error as { type: string }).type === 'CredentialsSignin') {
