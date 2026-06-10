@@ -31,7 +31,7 @@ The system utilizes modular architecture dividing frontend display layers from b
 
 1. **User Sign Up & Login**: Secure credentials validation with NextAuth v5 session tokens.
 2. **Dashboard Overview**: Fetches a single-transaction payload containing Carbon Score (0-100 scale vs global baseline), DNA charts, forecasting values, and active challenges.
-3. **Log Activity (DNA)**: Users enter travel distance, electricity consumed, or retail spend. The calculator processes EPA emission multipliers and updates the user's Carbon DNA.
+3. **Log Activity (DNA)**: Users enter travel distance, electricity consumed, or retail spend. The calculator processes EPA emission multipliers and updates the user's Carbon DNA. 
 4. **Receipt Scan**: Drag and drop a utility bill. Tesseract reads text, extracts details, estimates emissions, and logs it directly.
 5. **AI Climate Coach**: A dynamic chat interface where users can ask questions (e.g., about diet footprint changes) and receive suggestions.
 6. **PDF Reporting**: Users click "Export Weekly PDF" to capture report widgets and download a clean carbon ledger.
