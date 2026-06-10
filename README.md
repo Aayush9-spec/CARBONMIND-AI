@@ -11,7 +11,7 @@
 
 ---
 
-## 2. Approach & Logic
+## 2. Approach & Logic 
 
 The system utilizes modular architecture dividing frontend display layers from backend transaction layers and core calculation engines:
 
