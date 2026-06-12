@@ -3,7 +3,7 @@
 > **Your Personal Climate Digital Twin** — An AI-powered Carbon Footprint Awareness Platform designed to help users calculate, simulate, forecast, and reduce their greenhouse gas emissions.
 
 ---
-
+ 
 ## 1. Chosen Vertical & Persona
 
 - **Vertical**: Sustainability & Climate Action Tech (Carbon Ledger & AI Assistant).
