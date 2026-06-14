@@ -4,7 +4,7 @@
 
 ---
  
-## 1. Chosen Vertical & Persona
+## 1. Chosen Vertical & Persona 
 
 - **Vertical**: Sustainability & Climate Action Tech (Carbon Ledger & AI Assistant).
 - **Digital Twin Persona**: The assistant acts as the user's "Climate Digital Twin". It analyzes the user's historical logging data to create a custom "Carbon DNA" profile, forecasts future emissions, provides a sandboxed "What-If" simulator for lifestyle shifts, and acts as an intelligent virtual coach using dynamic recommendations.
