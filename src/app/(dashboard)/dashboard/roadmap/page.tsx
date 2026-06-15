@@ -6,12 +6,9 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Map, 
   Sparkles, 
   Check, 
   Circle,
-  HelpCircle,
-  AlertCircle,
   Loader2,
   TrendingDown
 } from 'lucide-react';
@@ -190,7 +187,7 @@ export default function RoadmapPage() {
             <div>
               <h3 className="text-sm font-semibold text-emerald-400 mb-1">Climate Digital Twin Recommendation</h3>
               <p className="text-sm text-gray-300 leading-relaxed font-medium">
-                Your highest emission category is <span className="text-emerald-400 font-bold capitalize">{dominantSector}</span>. We've prioritized actionable steps in this sector to maximize your potential carbon reduction. Track completed actions to see your estimated monthly savings increase!
+                Your highest emission category is <span className="text-emerald-400 font-bold capitalize">{dominantSector}</span>. We&apos;ve prioritized actionable steps in this sector to maximize your potential carbon reduction. Track completed actions to see your estimated monthly savings increase!
               </p>
             </div>
           </div>

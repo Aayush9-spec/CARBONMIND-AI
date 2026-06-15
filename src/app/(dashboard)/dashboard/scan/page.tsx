@@ -72,7 +72,7 @@ export default function ScanPage() {
         // Analyze text and extract info using regex patterns
         const docText = text.toLowerCase();
         let documentType: DocumentType = 'unknown';
-        let extractedData: ExtractedBillData = {
+        const extractedData: ExtractedBillData = {
           amount: undefined,
           unit: undefined,
           provider: undefined,

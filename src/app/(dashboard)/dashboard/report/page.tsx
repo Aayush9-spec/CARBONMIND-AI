@@ -6,13 +6,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { 
-  FileText, 
   Download, 
   Sparkles, 
   Loader2, 
   Check, 
   TrendingDown, 
-  TrendingUp,
   Award,
   AlertCircle
 } from 'lucide-react';
@@ -26,6 +24,11 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
+  const [reportDateRange] = useState(() => {
+    const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+    const end = new Date().toLocaleDateString();
+    return `Week of ${start} – ${end}`;
+  });
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -132,7 +135,7 @@ export default function ReportPage() {
                 <div>
                   <h2 className="font-heading text-2xl font-bold text-white">CarbonMind AI Weekly Report</h2>
                   <p className="text-sm text-gray-400 mt-1">
-                    Week of {new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString()} – {new Date().toLocaleDateString()}
+                    {reportDateRange}
                   </p>
                 </div>
                 <div className="text-right">
