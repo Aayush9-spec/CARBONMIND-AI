@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   TrendingDown,
   TrendingUp,
@@ -12,6 +13,8 @@ import {
   UtensilsCrossed,
   ShoppingBag,
   ArrowRight,
+  Loader2,
+  Award,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -26,12 +29,22 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import DigitalTwinViewport from '@/components/digital-twin-viewport';
+import BudgetAlerts from '@/components/budget-alerts';
+import AutomationSync from '@/components/automation-sync';
+import { getDashboardData } from '@/actions/carbon-actions';
+import type { DashboardData } from '@/types';
 
 // ── Mock Data (replaced by real data in Phase 4) ────────────────────────────
 
-const carbonScore = 72;
-const monthlyEmissions = 245.8;
-const changePercent = -8.3;
+const defaultDNA = {
+  transport: 42,
+  food: 18,
+  shopping: 25,
+  energy: 15,
+  total: 245.8,
+  dominantCategory: 'transport' as const,
+};
 
 const dnaData = [
   { name: 'Transport', value: 42, color: '#3b82f6', icon: Car },
@@ -73,44 +86,72 @@ const insights = [
   },
 ];
 
-const challenges = [
-  {
-    id: '1',
-    title: 'Walk 5 km this week',
-    progress: 65,
-    points: 75,
-    daysLeft: 3,
-  },
-  {
-    id: '2',
-    title: 'Use public transport',
-    progress: 40,
-    points: 100,
-    daysLeft: 5,
-  },
-];
-
-const leaderboard = [
-  { rank: 1, name: 'Sarah M.', reduction: 145.2, streak: 24 },
-  { rank: 2, name: 'Alex K.', reduction: 132.8, streak: 18 },
-  { rank: 3, name: 'You', reduction: 98.5, streak: 12, isCurrentUser: true },
-  { rank: 4, name: 'Jordan P.', reduction: 87.3, streak: 9 },
-  { rank: 5, name: 'Riley T.', reduction: 76.1, streak: 7 },
-];
-
 // ── Dashboard Page ──────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadDashboard = async () => {
+    try {
+      const res = await getDashboardData();
+      if (res.success && res.data) {
+        setData(res.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const carbonScore = data?.carbonScore ?? 72;
+  const monthlyEmissions = data?.carbonDNA.total ?? 245.8;
+  const changePercent = -8.3;
+  const activeStreak = data?.gamification.streak ?? 12;
+  const activeLevel = data?.gamification.level ?? 'Eco Explorer';
+
+  const carbonDNAParam = data?.carbonDNA
+    ? {
+        transport: data.carbonDNA.transport,
+        food: data.carbonDNA.food,
+        energy: data.carbonDNA.energy,
+        shopping: data.carbonDNA.shopping,
+        total: data.carbonDNA.total,
+        dominantCategory: data.carbonDNA.dominantCategory as 'transport' | 'food' | 'energy' | 'shopping',
+      }
+    : defaultDNA;
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* ── Page Header ───────────────────────────────────────────── */}
-      <div>
-        <h1 className="font-heading text-2xl font-bold md:text-3xl">
-          Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-gray-400">
-          Your climate intelligence overview
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold md:text-3xl">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-gray-400">
+            Your climate intelligence overview
+          </p>
+        </div>
+        <Link
+          href="/dashboard/marketplace"
+          className="gradient-primary flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition hover:opacity-90 active:scale-95 text-sm"
+        >
+          <Award className="h-4 w-4" /> Offset Marketplace
+        </Link>
       </div>
 
       {/* ── Top Row: Score + Stats ──────────────────────────────────── */}
@@ -185,7 +226,7 @@ export default function DashboardPage() {
           </div>
           <div>
             <p className="text-sm text-gray-400">Current Streak</p>
-            <p className="text-xl font-bold text-white">12 days</p>
+            <p className="text-xl font-bold text-white">{activeStreak} days</p>
             <p className="text-xs text-orange-400">Personal best!</p>
           </div>
         </div>
@@ -197,65 +238,22 @@ export default function DashboardPage() {
           </div>
           <div>
             <p className="text-sm text-gray-400">Level</p>
-            <p className="text-xl font-bold text-white">Eco Explorer</p>
-            <p className="text-xs text-gray-500">750 / 1,500 pts</p>
+            <p className="text-xl font-bold text-white capitalize">{activeLevel.replace('_', ' ')}</p>
+            <p className="text-xs text-gray-500">{data?.gamification.points ?? 450} pts</p>
           </div>
         </div>
       </div>
 
-      {/* ── Middle Row: DNA + Forecast ──────────────────────────────── */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Carbon DNA */}
-        <div className="glass-card p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Carbon DNA</h2>
-            <Link
-              href="/dashboard/carbon-dna"
-              className="flex items-center gap-1 text-sm text-emerald-400 transition-colors hover:text-emerald-300"
-            >
-              Details <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </Link>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="h-40 w-40 shrink-0" aria-label="Carbon DNA breakdown chart">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={dnaData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={70}
-                    paddingAngle={3}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {dnaData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex-1 space-y-3">
-              {dnaData.map((item) => (
-                <div key={item.name} className="flex items-center gap-3">
-                  <div
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                    aria-hidden="true"
-                  />
-                  <span className="flex-1 text-sm text-gray-400">
-                    {item.name}
-                  </span>
-                  <span className="text-sm font-semibold text-white">
-                    {item.value}%
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* ── Advanced Twin, Budget, and Automation Rows ────────────────── */}
+      <DigitalTwinViewport carbonDNA={carbonDNAParam} />
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <BudgetAlerts currentMonthly={monthlyEmissions} />
+        <AutomationSync onActivitySynced={loadDashboard} />
+      </div>
+
+      {/* ── Middle Row: Forecast ──────────────────────────────── */}
+      <div>
 
         {/* Forecast Chart */}
         <div className="glass-card p-6">

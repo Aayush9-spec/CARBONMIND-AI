@@ -5,30 +5,30 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { 
-  Dna, 
-  Plus, 
-  Trash2, 
-  Calendar, 
-  Leaf, 
-  Car, 
-  UtensilsCrossed, 
-  Zap, 
-  ShoppingBag, 
-  Loader2, 
+import {
+  Dna,
+  Plus,
+  Trash2,
+  Calendar,
+  Leaf,
+  Car,
+  UtensilsCrossed,
+  Zap,
+  ShoppingBag,
+  Loader2,
   Sparkles,
-  AlertCircle 
+  AlertCircle
 } from 'lucide-react';
 import { addActivity, deleteActivity, getActivities } from '@/actions/carbon-actions';
 import { calculateCarbonDNA, generateDNAExplanation } from '@/services/carbon-calculator';
 import type { CarbonActivity, CarbonDNA, CarbonCategory, Subcategory } from '@/types';
-import { 
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  Tooltip, 
-  Legend 
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend
 } from 'recharts';
 
 const CATEGORY_COLORS = {
@@ -91,7 +91,7 @@ export default function CarbonDNAPage() {
   const [dna, setDna] = useState<CarbonDNA | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [isPending, startTransition] = useTransition();
 
   // Form State
@@ -168,7 +168,7 @@ export default function CarbonDNAPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this activity entry?')) return;
-    
+
     try {
       const res = await deleteActivity(id);
       if (res.success) {
@@ -217,7 +217,7 @@ export default function CarbonDNAPage() {
 
       {/* ── Form Container ── */}
       {showForm && (
-        <div 
+        <div
           id="activity-form-container"
           className="glass-card p-6 animate-fade-in"
         >
@@ -337,7 +337,7 @@ export default function CarbonDNAPage() {
               </h2>
               <p className="text-sm text-gray-400 mb-4">Visual representation of your greenhouse gas footprint by category.</p>
             </div>
-            
+
             <div className="h-72 w-full flex items-center justify-center">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -355,7 +355,7 @@ export default function CarbonDNAPage() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip 
+                    <Tooltip
                       formatter={(val: any) => [`${val}%`, 'DNA Contribution']}
                     />
                     <Legend verticalAlign="bottom" height={36} />
@@ -392,7 +392,7 @@ export default function CarbonDNAPage() {
                     <div key={cat} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 text-gray-300 capitalize">
-                          <div 
+                          <div
                             className="flex h-7 w-7 items-center justify-center rounded-md text-white"
                             style={{ backgroundColor: `${color}20`, color }}
                           >
@@ -403,11 +403,11 @@ export default function CarbonDNAPage() {
                         <span className="font-bold text-white">{percentage}%</span>
                       </div>
                       <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden">
-                        <div 
+                        <div
                           className="h-full rounded-full transition-all duration-500"
-                          style={{ 
+                          style={{
                             width: `${percentage}%`,
-                            backgroundColor: color 
+                            backgroundColor: color
                           }}
                         />
                       </div>
@@ -449,8 +449,8 @@ export default function CarbonDNAPage() {
                       const color = CATEGORY_COLORS[act.category as CarbonCategory] ?? '#10b981';
 
                       return (
-                        <tr 
-                          key={act.id} 
+                        <tr
+                          key={act.id}
                           className="border-b border-white/5 hover:bg-white/5 transition duration-150"
                           role="row"
                         >
@@ -462,7 +462,7 @@ export default function CarbonDNAPage() {
                             })}
                           </td>
                           <td className="py-3.5 px-4 capitalize">
-                            <span 
+                            <span
                               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
                               style={{ backgroundColor: `${color}15`, color }}
                             >

@@ -24,6 +24,7 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [leagueTab, setLeagueTab] = useState<'global' | 'corporate' | 'neighborhood'>('global');
 
   const [isPending, startTransition] = useTransition();
 
@@ -144,22 +145,38 @@ export default function CommunityPage() {
       {!loading && data && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
           {/* ── Leaderboard ── */}
-          <div className="glass-card p-6 lg:col-span-7 space-y-4">
-            <h2 className="font-heading text-xl font-bold flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-400" /> Regional Carbon Leaderboard
-            </h2>
+          <div className="glass-card p-6 lg:col-span-7 space-y-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/5 pb-4">
+              <h2 className="font-heading text-lg font-bold flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-amber-400" /> Active Standings
+              </h2>
+              <div className="flex bg-black/40 p-0.5 rounded-lg border border-white/5">
+                {(['global', 'corporate', 'neighborhood'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setLeagueTab(tab)}
+                    className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition ${
+                      leagueTab === tab ? 'bg-emerald-500 text-black' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse" role="table">
                 <thead>
                   <tr className="border-b border-white/5 text-gray-400 text-xs font-semibold uppercase tracking-wider">
                     <th className="py-3 px-4">Rank</th>
-                    <th className="py-3 px-4">User</th>
-                    <th className="py-3 px-4 text-right">Active Streak</th>
+                    <th className="py-3 px-4">{leagueTab === 'global' ? 'User' : leagueTab === 'corporate' ? 'Department' : 'Neighborhood'}</th>
+                    <th className="py-3 px-4 text-right">League Streak</th>
                     <th className="py-3 px-4 text-right">CO₂ Reduced</th>
                   </tr>
                 </thead>
                 <tbody role="rowgroup">
-                  {data.leaderboard.map((user) => {
+                  {leagueTab === 'global' && data.leaderboard.map((user) => {
                     const isCurrentUser = user.name === 'You (Eco Hero)' || (data.recentActivities.length > 0 && user.rank === 1);
                     return (
                       <tr 
@@ -186,6 +203,44 @@ export default function CommunityPage() {
                       </tr>
                     );
                   })}
+
+                  {leagueTab === 'corporate' && [
+                    { rank: 1, name: 'Engineering Department 💻', streak: 84, reduction: 1420 },
+                    { rank: 2, name: 'Sales & Account Management 📈', streak: 42, reduction: 980 },
+                    { rank: 3, name: 'HR & Corporate Operations 🏢', streak: 21, reduction: 540 }
+                  ].map((dept) => (
+                    <tr key={dept.rank} className="border-b border-white/5 hover:bg-white/5 transition duration-150" role="row">
+                      <td className="py-3.5 px-4 font-bold text-gray-300">
+                        {dept.rank === 1 ? '🥇' : dept.rank === 2 ? '🥈' : '🥉'}
+                      </td>
+                      <td className="py-3.5 px-4 font-semibold text-white">{dept.name}</td>
+                      <td className="py-3.5 px-4 text-right text-orange-400 font-bold">
+                        <span className="inline-flex items-center gap-1">
+                          {dept.streak} <Flame className="h-4 w-4 fill-orange-500/10" />
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-extrabold text-emerald-400">-{dept.reduction.toFixed(1)} kg</td>
+                    </tr>
+                  ))}
+
+                  {leagueTab === 'neighborhood' && [
+                    { rank: 1, name: 'Green Valley Estates 🏡', streak: 124, reduction: 2840 },
+                    { rank: 2, name: 'Oakwood Heights 🌳', streak: 98, reduction: 1920 },
+                    { rank: 3, name: 'Riverbend District 🌊', streak: 64, reduction: 1120 }
+                  ].map((neighborhood) => (
+                    <tr key={neighborhood.rank} className="border-b border-white/5 hover:bg-white/5 transition duration-150" role="row">
+                      <td className="py-3.5 px-4 font-bold text-gray-300">
+                        {neighborhood.rank === 1 ? '🥇' : neighborhood.rank === 2 ? '🥈' : '🥉'}
+                      </td>
+                      <td className="py-3.5 px-4 font-semibold text-white">{neighborhood.name}</td>
+                      <td className="py-3.5 px-4 text-right text-orange-400 font-bold">
+                        <span className="inline-flex items-center gap-1">
+                          {neighborhood.streak} <Flame className="h-4 w-4 fill-orange-500/10" />
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-extrabold text-emerald-400">-{neighborhood.reduction.toFixed(1)} kg</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
