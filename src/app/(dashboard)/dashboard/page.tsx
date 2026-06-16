@@ -399,38 +399,46 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-4">
-            {challenges.map((challenge) => (
-              <div
-                key={challenge.id}
-                className="rounded-lg border border-white/5 bg-white/[0.02] p-4"
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-white">
-                    {challenge.title}
-                  </h3>
-                  <div className="flex items-center gap-1 text-xs text-amber-400">
-                    <Target className="h-3 w-3" aria-hidden="true" />
-                    {challenge.points} pts
+            {(data?.gamification.activeChallenges ?? []).map((challenge) => {
+              const daysLeft = Math.max(0, Math.ceil((new Date(challenge.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+              return (
+                <div
+                  key={challenge.id}
+                  className="rounded-lg border border-white/5 bg-white/[0.02] p-4"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-white">
+                      {challenge.title}
+                    </h3>
+                    <div className="flex items-center gap-1 text-xs text-amber-400">
+                      <Target className="h-3 w-3" aria-hidden="true" />
+                      {challenge.points} pts
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mb-1.5 h-2 w-full overflow-hidden rounded-full bg-white/5">
+                    <div
+                      className="h-full rounded-full gradient-primary transition-all duration-500"
+                      style={{ width: `${challenge.progress}%` }}
+                      role="progressbar"
+                      aria-valuenow={challenge.progress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${challenge.title} progress`}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{challenge.progress}% complete</span>
+                    <span>{daysLeft} days left</span>
                   </div>
                 </div>
-                {/* Progress bar */}
-                <div className="mb-1.5 h-2 w-full overflow-hidden rounded-full bg-white/5">
-                  <div
-                    className="h-full rounded-full gradient-primary transition-all duration-500"
-                    style={{ width: `${challenge.progress}%` }}
-                    role="progressbar"
-                    aria-valuenow={challenge.progress}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`${challenge.title} progress`}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{challenge.progress}% complete</span>
-                  <span>{challenge.daysLeft} days left</span>
-                </div>
+              );
+            })}
+            {(data?.gamification.activeChallenges ?? []).length === 0 && (
+              <div className="text-center py-6 text-xs text-gray-500">
+                No active challenges. Explore the challenges catalog to join one!
               </div>
-            ))}
+            )}
           </div>
         </div>
 
