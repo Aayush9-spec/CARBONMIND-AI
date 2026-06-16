@@ -34,7 +34,7 @@ export default function AutomationSync({ onActivitySynced }: AutomationSyncProps
           subcategory: t.subcategory,
           value: t.value,
           unit: t.unit,
-          activityDate: new Date(),
+          activityDate: new Date().toISOString(),
           metadata: { source: 'Plaid Sync API' }
         });
       }
@@ -63,7 +63,7 @@ export default function AutomationSync({ onActivitySynced }: AutomationSyncProps
         subcategory: 'electricity',
         value: 12.5,
         unit: 'kWh',
-        activityDate: new Date(),
+        activityDate: new Date().toISOString(),
         metadata: { source: 'Nest Smart Meter API' }
       });
 
