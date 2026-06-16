@@ -35,7 +35,6 @@ export default function AutomationSync({ onActivitySynced }: AutomationSyncProps
           value: t.value,
           unit: t.unit,
           activityDate: new Date().toISOString(),
-          metadata: { source: 'Plaid Sync API' }
         });
       }
 
@@ -64,7 +63,6 @@ export default function AutomationSync({ onActivitySynced }: AutomationSyncProps
         value: 12.5,
         unit: 'kWh',
         activityDate: new Date().toISOString(),
-        metadata: { source: 'Nest Smart Meter API' }
       });
 
       setIotStatus('success');
