@@ -239,7 +239,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-sm text-gray-400">Level</p>
             <p className="text-xl font-bold text-white capitalize">{activeLevel.replace('_', ' ')}</p>
-            <p className="text-xs text-gray-500">{data?.gamification.points ?? 450} pts</p>
+            <p className="text-xs text-gray-500">{data?.gamification.totalPoints ?? 450} pts</p>
           </div>
         </div>
       </div>
