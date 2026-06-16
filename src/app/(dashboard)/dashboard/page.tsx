@@ -455,43 +455,51 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-2">
-            {leaderboard.map((entry) => (
-              <div
-                key={entry.rank}
-                className={`flex items-center gap-3 rounded-lg p-2.5 ${
-                  entry.isCurrentUser
-                    ? 'border border-emerald-500/20 bg-emerald-500/5'
-                    : ''
-                }`}
-              >
-                <span
-                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                    entry.rank === 1
-                      ? 'bg-amber-500/20 text-amber-400'
-                      : entry.rank === 2
-                        ? 'bg-gray-400/20 text-gray-300'
-                        : entry.rank === 3
-                          ? 'bg-orange-500/20 text-orange-400'
-                          : 'bg-white/5 text-gray-500'
+            {(data?.leaderboard ?? []).slice(0, 5).map((entry) => {
+              const isCurrentUser = entry.name === 'You (Eco Hero)';
+              return (
+                <div
+                  key={entry.userId}
+                  className={`flex items-center gap-3 rounded-lg p-2.5 ${
+                    isCurrentUser
+                      ? 'border border-emerald-500/20 bg-emerald-500/5'
+                      : ''
                   }`}
                 >
-                  {entry.rank}
-                </span>
-                <div className="flex-1">
-                  <p
-                    className={`text-sm font-medium ${entry.isCurrentUser ? 'text-emerald-400' : 'text-white'}`}
+                  <span
+                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                      entry.rank === 1
+                        ? 'bg-amber-500/20 text-amber-400'
+                        : entry.rank === 2
+                          ? 'bg-gray-400/20 text-gray-300'
+                          : entry.rank === 3
+                            ? 'bg-orange-500/20 text-orange-400'
+                            : 'bg-white/5 text-gray-500'
+                    }`}
                   >
-                    {entry.name}
-                  </p>
-                  <p className="text-[10px] text-gray-500">
-                    🔥 {entry.streak} day streak
+                    {entry.rank}
+                  </span>
+                  <div className="flex-1">
+                    <p
+                      className={`text-sm font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-white'}`}
+                    >
+                      {entry.name}
+                    </p>
+                    <p className="text-[10px] text-gray-500">
+                      🔥 {entry.streak} day streak
+                    </p>
+                  </div>
+                  <p className="text-sm font-semibold text-emerald-400">
+                    -{entry.co2Reduced.toFixed(1)} kg
                   </p>
                 </div>
-                <p className="text-sm font-semibold text-emerald-400">
-                  -{entry.reduction} kg
-                </p>
+              );
+            })}
+            {(data?.leaderboard ?? []).length === 0 && (
+              <div className="text-center py-6 text-xs text-gray-500">
+                No leaderboard entries found. Start reducing to join the rankings!
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
