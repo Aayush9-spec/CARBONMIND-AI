@@ -73,7 +73,7 @@ export default function MarketplacePage() {
         const res = await getDashboardData();
         if (res.success && res.data) {
           setData(res.data);
-          setPoints(res.data.gamification.points);
+          setPoints(res.data.gamification.totalPoints);
         }
       } catch (err) {
         console.error(err);
