@@ -112,7 +112,7 @@ export default function DashboardPage() {
   const carbonScore = data?.carbonScore ?? 72;
   const monthlyEmissions = data?.carbonDNA.total ?? 245.8;
   const changePercent = -8.3;
-  const activeStreak = data?.gamification.streak ?? 12;
+  const activeStreak = data?.gamification.currentStreak ?? 12;
   const activeLevel = data?.gamification.level ?? 'Eco Explorer';
 
   const carbonDNAParam = data?.carbonDNA
