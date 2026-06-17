@@ -16,8 +16,9 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { addActivity } from '@/actions/carbon-actions';
-import type { DocumentType, ExtractedBillData } from '@/types';
+import type { DocumentType, ExtractedBillData, Subcategory } from '@/types';
 import { createWorker } from 'tesseract.js';
+import Image from 'next/image';
 
 export default function ScanPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -144,7 +145,7 @@ export default function ScanPage() {
           estimatedEmissions: Math.round(estimatedEmissions * 100) / 100,
         });
 
-      } catch (err: any) {
+      } catch (err) {
         console.error(err);
         setError('OCR Scanning failed. Make sure the uploaded file is a valid clear image.');
       } finally {
@@ -178,7 +179,7 @@ export default function ScanPage() {
     startTransition(async () => {
       const res = await addActivity({
         category: categoryMap[ocrResult.documentType],
-        subcategory: subcategoryMap[ocrResult.documentType] as any,
+        subcategory: subcategoryMap[ocrResult.documentType] as Subcategory,
         value: ocrResult.extractedData.amount ?? 50,
         unit: ocrResult.extractedData.unit ?? 'units',
         activityDate: new Date().toISOString().split('T')[0],
@@ -238,9 +239,12 @@ export default function ScanPage() {
             />
             {previewUrl ? (
               <div className="space-y-4 text-center">
-                <img 
+                <Image 
                   src={previewUrl} 
                   alt="Document Preview" 
+                  width={300}
+                  height={200}
+                  unoptimized
                   className="max-h-48 mx-auto rounded-lg border border-white/5 shadow-md object-contain"
                 />
                 <p className="text-xs text-gray-400">{file?.name} ({(file!.size / 1024).toFixed(1)} KB)</p>
@@ -280,7 +284,7 @@ export default function ScanPage() {
               <FileText className="h-10 w-10 text-gray-600 mb-3 animate-pulse" />
               <h3 className="font-heading text-lg font-bold text-gray-400">Extracted Results</h3>
               <p className="text-xs text-gray-500 max-w-xs mt-1 leading-relaxed">
-                Upload a bill or receipt image, and click "Start OCR Scanning" to display structural parameters.
+                Upload a bill or receipt image, and click &quot;Start OCR Scanning&quot; to display structural parameters.
               </p>
             </div>
           ) : (

@@ -103,13 +103,6 @@ export default function CarbonDNAPage() {
     new Date().toISOString().split('T')[0]
   );
 
-  // Sync subcategory selection when category changes
-  useEffect(() => {
-    if (SUBCATEGORIES[category].length > 0) {
-      setSubcategory(SUBCATEGORIES[category][0].value);
-    }
-  }, [category]);
-
   const loadData = async () => {
     try {
       setLoading(true);
@@ -122,15 +115,39 @@ export default function CarbonDNAPage() {
       } else {
         setError(res.error ?? 'Failed to load carbon activities');
       }
-    } catch (err: any) {
-      setError(err.message ?? 'An unexpected error occurred');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    let active = true;
+    const load = async () => {
+      try {
+        const res = await getActivities();
+        if (res.success && res.data && active) {
+          setActivities(res.data);
+          const computedDna = calculateCarbonDNA(res.data);
+          computedDna.aiExplanation = generateDNAExplanation(computedDna);
+          setDna(computedDna);
+          setLoading(false);
+        } else if (res.error && active) {
+          setError(res.error);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+          setLoading(false);
+        }
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleAddActivity = async (e: React.FormEvent) => {
@@ -176,8 +193,8 @@ export default function CarbonDNAPage() {
       } else {
         setError(res.error ?? 'Failed to delete activity');
       }
-    } catch (err: any) {
-      setError(err.message ?? 'Failed to delete activity');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete activity');
     }
   };
 
@@ -232,7 +249,13 @@ export default function CarbonDNAPage() {
               <select
                 id="form-category"
                 value={category}
-                onChange={(e) => setCategory(e.target.value as CarbonCategory)}
+                onChange={(e) => {
+                  const newCat = e.target.value as CarbonCategory;
+                  setCategory(newCat);
+                  if (SUBCATEGORIES[newCat].length > 0) {
+                    setSubcategory(SUBCATEGORIES[newCat][0].value);
+                  }
+                }}
                 className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-white focus:border-emerald-500 focus:outline-none"
               >
                 <option value="transport">Transportation</option>
@@ -356,7 +379,7 @@ export default function CarbonDNAPage() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(val: any) => [`${val}%`, 'DNA Contribution']}
+                      formatter={(val) => [`${val}%`, 'DNA Contribution']}
                     />
                     <Legend verticalAlign="bottom" height={36} />
                   </PieChart>
@@ -495,7 +518,7 @@ export default function CarbonDNAPage() {
                   ) : (
                     <tr>
                       <td colSpan={6} className="py-8 text-center text-gray-500">
-                        No activities logged yet. Get started by clicking "Log New Activity" above!
+                        No activities logged yet. Get started by clicking &quot;Log New Activity&quot; above!
                       </td>
                     </tr>
                   )}

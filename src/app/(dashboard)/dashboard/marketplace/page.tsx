@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Award, ShoppingBag, Check, ShieldCheck, Heart, Sparkles, Loader2 } from 'lucide-react';
+import { Award, ShieldCheck, Loader2 } from 'lucide-react';
 import { getDashboardData } from '@/actions/carbon-actions';
-import type { DashboardData } from '@/types';
 
 interface Project {
   id: string;
@@ -57,8 +56,11 @@ const PROJECTS: Project[] = [
   },
 ];
 
+function generateCertificateId(): string {
+  return `CERT-DNATWIN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+}
+
 export default function MarketplacePage() {
-  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [points, setPoints] = useState(450); // Fallback points
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
@@ -67,21 +69,23 @@ export default function MarketplacePage() {
   const [certificateId, setCertificateId] = useState('');
 
   useEffect(() => {
+    let active = true;
     const loadData = async () => {
       try {
-        setLoading(true);
         const res = await getDashboardData();
-        if (res.success && res.data) {
-          setData(res.data);
-          setPoints(res.data.gamification.totalPoints);
+        if (res.success && res.data && active) {
+          setPoints(res.data.gamification.points);
+          setLoading(false);
         }
       } catch (err) {
         console.error(err);
-      } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     loadData();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleRedeem = async (project: Project) => {
@@ -91,7 +95,7 @@ export default function MarketplacePage() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       setPoints((prev) => prev - project.pricePerKg * 10);
       setPurchasedProject(project);
-      setCertificateId(`CERT-DNATWIN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+      setCertificateId(generateCertificateId());
       setSuccessModal(true);
     } catch (err) {
       console.error(err);

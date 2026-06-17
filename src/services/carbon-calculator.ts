@@ -5,7 +5,6 @@
 // =============================================================================
 
 import {
-  EMISSION_FACTORS,
   calculateEmission,
   getEmissionFactor,
 } from '@/lib/constants/emission-factors';

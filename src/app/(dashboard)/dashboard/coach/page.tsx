@@ -6,18 +6,21 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react';
 import { 
-  MessageSquare, 
   Send, 
   Sparkles, 
   Leaf, 
   Lightbulb, 
-  Check, 
   Loader2,
   ChevronRight,
   TrendingDown
 } from 'lucide-react';
-import { getDashboardData } from '@/actions/carbon-actions';
-import type { DashboardData, ChatMessage, AIRecommendation } from '@/types';
+import type { ChatMessage, AIRecommendation } from '@/types';
+
+let messageIdCounter = 0;
+const generateMsgId = (): string => {
+  messageIdCounter++;
+  return `${Date.now()}-${messageIdCounter}`;
+};
 
 const SUGGESTED_PROMPTS = [
   'How can I lower my electricity emissions?',
@@ -109,7 +112,6 @@ export default function AICoachPage() {
     }
   ]);
   const [input, setInput] = useState('');
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   
   const [isPending, startTransition] = useTransition();
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -119,16 +121,6 @@ export default function AICoachPage() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isPending]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      const res = await getDashboardData();
-      if (res.success && res.data) {
-        setDashboard(res.data);
-      }
-    };
-    loadData();
-  }, []);
-
   const handleSend = (textToSend?: string) => {
     const text = (textToSend ?? input).trim();
     if (!text) return;
@@ -137,7 +129,7 @@ export default function AICoachPage() {
 
     // Append user message
     const userMsg: ChatMessage = {
-      id: Math.random().toString(),
+      id: generateMsgId(),
       role: 'user',
       content: text,
       timestamp: new Date(),
@@ -155,7 +147,7 @@ export default function AICoachPage() {
 
       if (matched) {
         reply = {
-          id: Math.random().toString(),
+          id: generateMsgId(),
           role: 'assistant',
           content: matched.message,
           recommendations: matched.recs,
@@ -163,7 +155,7 @@ export default function AICoachPage() {
         };
       } else {
         reply = {
-          id: Math.random().toString(),
+          id: generateMsgId(),
           role: 'assistant',
           content: `I appreciate the question! As your Carbon Digital Twin, I see your dominant emission sector is transport. Focusing reduction effort there will save the most CO₂e. Try asking for specific tips, or ask: "Give me 3 easy actions for travel commuting."`,
           timestamp: new Date(),

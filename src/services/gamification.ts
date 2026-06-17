@@ -4,7 +4,7 @@
 // Handles user level progression, points, streaks, and badge awards.
 // =============================================================================
 
-import type { UserLevel, BadgeType, Achievement } from '@/types';
+import type { UserLevel } from '@/types';
 
 export interface LevelConfig {
   level: UserLevel;

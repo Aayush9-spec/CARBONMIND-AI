@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { generateForecast } from '@/services/forecasting-engine';
 import { getLevelDetails, calculateNewStreak } from '@/services/gamification';
 import { runSimulation } from '@/services/simulator-engine';
-import type { CarbonActivity, CarbonCategory, Subcategory, ScenarioChange } from '@/types';
+import type { CarbonActivity, CarbonCategory, ScenarioChange } from '@/types';
 
 describe('Forecasting Engine Tests', () => {
   it('should return empty forecast if less than 7 days of activities', () => {

@@ -13,11 +13,10 @@ import {
   Check, 
   AlertCircle,
   Loader2,
-  Lock,
   Compass
 } from 'lucide-react';
 import { getDashboardData } from '@/actions/carbon-actions';
-import type { DashboardData, LeaderboardEntry } from '@/types';
+import type { DashboardData } from '@/types';
 
 export default function CommunityPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -39,22 +38,25 @@ export default function CommunityPage() {
     members: { name: string; reduction: number; streak: number }[];
   } | null>(null);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const res = await getDashboardData();
-      if (res.success && res.data) {
-        setData(res.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    loadData();
+    let active = true;
+    const load = async () => {
+      try {
+        const res = await getDashboardData();
+        if (active && res.success && res.data) {
+          setData(res.data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleCreateTeam = (e: React.FormEvent) => {

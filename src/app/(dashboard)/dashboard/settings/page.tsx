@@ -6,11 +6,8 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { 
-  Settings, 
   User, 
-  Sparkles, 
   Check, 
-  AlertCircle,
   Loader2,
   Sliders,
   Eye

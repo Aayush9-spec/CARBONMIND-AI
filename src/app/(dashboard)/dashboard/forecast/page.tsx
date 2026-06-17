@@ -5,19 +5,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Minus,
-  Sparkles, 
-  Loader2, 
-  Info,
-  Calendar,
-  ShieldCheck
-} from 'lucide-react';
-import { getDashboardData, addActivity, getActivities } from '@/actions/carbon-actions';
+import { TrendingUp, TrendingDown, Minus, Sparkles, Loader2, Info, Calendar, ShieldCheck } from 'lucide-react';
+import { addActivity, getActivities } from '@/actions/carbon-actions';
 import { generateForecast } from '@/services/forecasting-engine';
-import type { CarbonActivity, ForecastResult, ForecastPeriod, ForecastPoint } from '@/types';
+import type { ForecastResult, ForecastPeriod, Subcategory } from '@/types';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -31,45 +22,41 @@ import {
 
 export default function ForecastPage() {
   const [period, setPeriod] = useState<ForecastPeriod>(30);
-  const [activities, setActivities] = useState<CarbonActivity[]>([]);
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const res = await getActivities();
-      if (res.success && res.data) {
-        setActivities(res.data);
-        const forecastResult = generateForecast(res.data, period);
-        
-        // Generate a friendly explanation
-        if (res.data.length >= 7) {
-          const trendLabel = forecastResult.trend === 'increasing' ? 'upward' : forecastResult.trend === 'decreasing' ? 'downward' : 'stable';
-          forecastResult.aiExplanation = `Based on your recent logging history, your carbon footprint is projected to trend ${trendLabel} over the next ${period} days. We estimate your total emissions will reach ${forecastResult.totalPredicted.toFixed(1)} kg CO₂e, representing a ${Math.abs(forecastResult.changePercent)}% ${forecastResult.changePercent >= 0 ? 'increase' : 'decrease'} compared to your historical average. Keep logging to improve confidence!`;
-        }
-        
-        setForecast(forecastResult);
-      } else {
-        setError(res.error ?? 'Failed to retrieve logs');
-      }
-    } catch (err: any) {
-      setError(err.message ?? 'An unexpected error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   useEffect(() => {
-    loadData();
-  }, [period]);
+    let active = true;
+    const load = async () => {
+      try {
+        const res = await getActivities();
+        if (active && res.success && res.data) {
+          const forecastResult = generateForecast(res.data, period);
+          
+          if (res.data.length >= 7) {
+            const trendLabel = forecastResult.trend === 'increasing' ? 'upward' : forecastResult.trend === 'decreasing' ? 'downward' : 'stable';
+            forecastResult.aiExplanation = `Based on your recent logging history, your carbon footprint is projected to trend ${trendLabel} over the next ${period} days. We estimate your total emissions will reach ${forecastResult.totalPredicted.toFixed(1)} kg CO₂e, representing a ${Math.abs(forecastResult.changePercent)}% ${forecastResult.changePercent >= 0 ? 'increase' : 'decrease'} compared to your historical average. Keep logging to improve confidence!`;
+          }
+          
+          setForecast(forecastResult);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [period, reloadTrigger]);
 
   // Handle mock generation for demo if insufficient data
   const handleGenerateMockData = async () => {
     try {
       setLoading(true);
-      setError(null);
       
       const now = new Date();
       // Insert 10 mock activities across past 14 days
@@ -85,16 +72,16 @@ export default function ForecastPage() {
 
         await addActivity({
           category: categories[idx],
-          subcategory: subcategories[idx] as any,
+          subcategory: subcategories[idx] as Subcategory,
           value: values[idx],
           unit: units[idx],
           activityDate: activityDate.toISOString().split('T')[0],
         });
       }
 
-      await loadData();
-    } catch (err: any) {
-      setError('Failed to seed demonstration data.');
+      setReloadTrigger(prev => prev + 1);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }

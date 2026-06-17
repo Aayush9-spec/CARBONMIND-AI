@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sparkles, Home, Car, Zap, ShieldAlert, Award } from 'lucide-react';
+import { Home, ShieldAlert, Award } from 'lucide-react';
 
 interface DigitalTwinProps {
   carbonDNA: {

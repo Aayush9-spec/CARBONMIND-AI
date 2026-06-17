@@ -4,14 +4,9 @@ import { useState, useEffect } from 'react';
 import {
   TrendingDown,
   TrendingUp,
-  Minus,
   Flame,
   Trophy,
   Target,
-  Zap,
-  Car,
-  UtensilsCrossed,
-  ShoppingBag,
   ArrowRight,
   Loader2,
   Award,
@@ -25,9 +20,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
 import DigitalTwinViewport from '@/components/digital-twin-viewport';
 import BudgetAlerts from '@/components/budget-alerts';
@@ -45,13 +37,6 @@ const defaultDNA = {
   total: 245.8,
   dominantCategory: 'transport' as const,
 };
-
-const dnaData = [
-  { name: 'Transport', value: 42, color: '#3b82f6', icon: Car },
-  { name: 'Food', value: 18, color: '#f59e0b', icon: UtensilsCrossed },
-  { name: 'Shopping', value: 25, color: '#8b5cf6', icon: ShoppingBag },
-  { name: 'Energy', value: 15, color: '#ef4444', icon: Zap },
-];
 
 const forecastData = Array.from({ length: 30 }, (_, i) => ({
   day: `Day ${i + 1}`,
@@ -86,33 +71,61 @@ const insights = [
   },
 ];
 
+const challenges = [
+  {
+    id: '1',
+    title: 'Walk 5 km this week',
+    progress: 65,
+    points: 75,
+    daysLeft: 3,
+  },
+  {
+    id: '2',
+    title: 'Use public transport',
+    progress: 40,
+    points: 100,
+    daysLeft: 5,
+  },
+];
+
+const leaderboard = [
+  { rank: 1, name: 'Sarah M.', reduction: 145.2, streak: 24 },
+  { rank: 2, name: 'Alex K.', reduction: 132.8, streak: 18 },
+  { rank: 3, name: 'You', reduction: 98.5, streak: 12, isCurrentUser: true },
+  { rank: 4, name: 'Jordan P.', reduction: 87.3, streak: 9 },
+  { rank: 5, name: 'Riley T.', reduction: 76.1, streak: 7 },
+];
+
 // ── Dashboard Page ──────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadDashboard = async () => {
-    try {
-      const res = await getDashboardData();
-      if (res.success && res.data) {
-        setData(res.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadDashboard();
+    let active = true;
+    async function load() {
+      try {
+        const res = await getDashboardData();
+        if (res.success && res.data && active) {
+          setData(res.data);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const carbonScore = data?.carbonScore ?? 72;
   const monthlyEmissions = data?.carbonDNA.total ?? 245.8;
   const changePercent = -8.3;
-  const activeStreak = data?.gamification.currentStreak ?? 12;
+  const activeStreak = data?.gamification.streak ?? 12;
   const activeLevel = data?.gamification.level ?? 'Eco Explorer';
 
   const carbonDNAParam = data?.carbonDNA
@@ -239,7 +252,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-sm text-gray-400">Level</p>
             <p className="text-xl font-bold text-white capitalize">{activeLevel.replace('_', ' ')}</p>
-            <p className="text-xs text-gray-500">{data?.gamification.totalPoints ?? 450} pts</p>
+            <p className="text-xs text-gray-500">{data?.gamification.points ?? 450} pts</p>
           </div>
         </div>
       </div>
@@ -399,46 +412,38 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-4">
-            {(data?.gamification.activeChallenges ?? []).map((challenge) => {
-              const daysLeft = Math.max(0, Math.ceil((new Date(challenge.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-              return (
-                <div
-                  key={challenge.id}
-                  className="rounded-lg border border-white/5 bg-white/[0.02] p-4"
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-white">
-                      {challenge.title}
-                    </h3>
-                    <div className="flex items-center gap-1 text-xs text-amber-400">
-                      <Target className="h-3 w-3" aria-hidden="true" />
-                      {challenge.points} pts
-                    </div>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="mb-1.5 h-2 w-full overflow-hidden rounded-full bg-white/5">
-                    <div
-                      className="h-full rounded-full gradient-primary transition-all duration-500"
-                      style={{ width: `${challenge.progress}%` }}
-                      role="progressbar"
-                      aria-valuenow={challenge.progress}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`${challenge.title} progress`}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{challenge.progress}% complete</span>
-                    <span>{daysLeft} days left</span>
+            {challenges.map((challenge) => (
+              <div
+                key={challenge.id}
+                className="rounded-lg border border-white/5 bg-white/[0.02] p-4"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-white">
+                    {challenge.title}
+                  </h3>
+                  <div className="flex items-center gap-1 text-xs text-amber-400">
+                    <Target className="h-3 w-3" aria-hidden="true" />
+                    {challenge.points} pts
                   </div>
                 </div>
-              );
-            })}
-            {(data?.gamification.activeChallenges ?? []).length === 0 && (
-              <div className="text-center py-6 text-xs text-gray-500">
-                No active challenges. Explore the challenges catalog to join one!
+                {/* Progress bar */}
+                <div className="mb-1.5 h-2 w-full overflow-hidden rounded-full bg-white/5">
+                  <div
+                    className="h-full rounded-full gradient-primary transition-all duration-500"
+                    style={{ width: `${challenge.progress}%` }}
+                    role="progressbar"
+                    aria-valuenow={challenge.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${challenge.title} progress`}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>{challenge.progress}% complete</span>
+                  <span>{challenge.daysLeft} days left</span>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
 
@@ -455,51 +460,43 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-2">
-            {(data?.leaderboard ?? []).slice(0, 5).map((entry) => {
-              const isCurrentUser = entry.name === 'You (Eco Hero)';
-              return (
-                <div
-                  key={entry.userId}
-                  className={`flex items-center gap-3 rounded-lg p-2.5 ${
-                    isCurrentUser
-                      ? 'border border-emerald-500/20 bg-emerald-500/5'
-                      : ''
+            {leaderboard.map((entry) => (
+              <div
+                key={entry.rank}
+                className={`flex items-center gap-3 rounded-lg p-2.5 ${
+                  entry.isCurrentUser
+                    ? 'border border-emerald-500/20 bg-emerald-500/5'
+                    : ''
+                }`}
+              >
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                    entry.rank === 1
+                      ? 'bg-amber-500/20 text-amber-400'
+                      : entry.rank === 2
+                        ? 'bg-gray-400/20 text-gray-300'
+                        : entry.rank === 3
+                          ? 'bg-orange-500/20 text-orange-400'
+                          : 'bg-white/5 text-gray-500'
                   }`}
                 >
-                  <span
-                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                      entry.rank === 1
-                        ? 'bg-amber-500/20 text-amber-400'
-                        : entry.rank === 2
-                          ? 'bg-gray-400/20 text-gray-300'
-                          : entry.rank === 3
-                            ? 'bg-orange-500/20 text-orange-400'
-                            : 'bg-white/5 text-gray-500'
-                    }`}
+                  {entry.rank}
+                </span>
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-medium ${entry.isCurrentUser ? 'text-emerald-400' : 'text-white'}`}
                   >
-                    {entry.rank}
-                  </span>
-                  <div className="flex-1">
-                    <p
-                      className={`text-sm font-medium ${isCurrentUser ? 'text-emerald-400' : 'text-white'}`}
-                    >
-                      {entry.name}
-                    </p>
-                    <p className="text-[10px] text-gray-500">
-                      🔥 {entry.streak} day streak
-                    </p>
-                  </div>
-                  <p className="text-sm font-semibold text-emerald-400">
-                    -{entry.co2Reduced.toFixed(1)} kg
+                    {entry.name}
+                  </p>
+                  <p className="text-[10px] text-gray-500">
+                    🔥 {entry.streak} day streak
                   </p>
                 </div>
-              );
-            })}
-            {(data?.leaderboard ?? []).length === 0 && (
-              <div className="text-center py-6 text-xs text-gray-500">
-                No leaderboard entries found. Start reducing to join the rankings!
+                <p className="text-sm font-semibold text-emerald-400">
+                  -{entry.reduction} kg
+                </p>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>

@@ -12,7 +12,6 @@ import {
   Trash2, 
   Sparkles, 
   Loader2, 
-  Check,
   TrendingDown
 } from 'lucide-react';
 import { simulateScenario } from '@/actions/carbon-actions';
@@ -29,12 +28,6 @@ import {
   Legend 
 } from 'recharts';
 
-const CATEGORY_COLORS = {
-  transport: '#3b82f6', // blue
-  food: '#f59e0b',      // amber
-  energy: '#ef4444',     // red
-  shopping: '#8b5cf6',   // purple
-};
 
 const SUBCATEGORIES = {
   transport: [
@@ -96,8 +89,8 @@ export default function SimulatorPage() {
     if (preset) {
       const typedChanges = preset.changes.map((c) => ({
         ...c,
-        category: c.category as any,
-        subcategory: c.subcategory as any,
+        category: c.category as CarbonCategory,
+        subcategory: c.subcategory as Subcategory,
       }));
       setChanges(typedChanges);
       setResult(null);
@@ -269,7 +262,7 @@ export default function SimulatorPage() {
               <select
                 id="sim-frequency"
                 value={frequency}
-                onChange={(e) => setFrequency(e.target.value as any)}
+                onChange={(e) => setFrequency(e.target.value as 'daily' | 'weekly' | 'monthly')}
                 className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-white focus:border-emerald-500 focus:outline-none"
               >
                 <option value="daily">Daily</option>
@@ -349,7 +342,7 @@ export default function SimulatorPage() {
               <FlaskConical className="h-10 w-10 text-gray-500 mb-3 animate-pulse" />
               <h3 className="font-heading text-lg font-bold text-gray-300">Ready to Simulate</h3>
               <p className="text-xs text-gray-500 max-w-xs mt-1 leading-relaxed">
-                Add modifications or load a preset, then click "Run Simulation" to see projected calculations.
+                Add modifications or load a preset, then click &quot;Run Simulation&quot; to see projected calculations.
               </p>
             </div>
           ) : (

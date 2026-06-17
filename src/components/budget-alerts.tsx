@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertCircle, Zap, Leaf, CheckCircle2, ChevronRight } from 'lucide-react';
+import { AlertCircle, Zap, Leaf } from 'lucide-react';
 
 interface BudgetAlertsProps {
   currentMonthly: number;

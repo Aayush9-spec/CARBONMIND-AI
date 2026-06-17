@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { RefreshCw, Check, AlertCircle, Database, Shield, Zap, ShoppingCart } from 'lucide-react';
+import { RefreshCw, Check, Database, Shield, Zap, ShoppingCart } from 'lucide-react';
 import { addActivity } from '@/actions/carbon-actions';
+import type { Subcategory } from '@/types';
 
 interface AutomationSyncProps {
   onActivitySynced: () => void;
@@ -31,10 +32,11 @@ export default function AutomationSync({ onActivitySynced }: AutomationSyncProps
       for (const t of mockTransactions) {
         await addActivity({
           category: t.category,
-          subcategory: t.subcategory,
+          subcategory: t.subcategory as Subcategory,
           value: t.value,
           unit: t.unit,
-          activityDate: new Date().toISOString(),
+          activityDate: new Date().toISOString().split('T')[0],
+          metadata: { source: 'Plaid Sync API' }
         });
       }
 
@@ -62,7 +64,8 @@ export default function AutomationSync({ onActivitySynced }: AutomationSyncProps
         subcategory: 'electricity',
         value: 12.5,
         unit: 'kWh',
-        activityDate: new Date().toISOString(),
+        activityDate: new Date().toISOString().split('T')[0],
+        metadata: { source: 'Nest Smart Meter API' }
       });
 
       setIotStatus('success');

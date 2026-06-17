@@ -4,7 +4,6 @@ import {
   formatEmissionsCompact,
   formatChange,
   formatConfidence,
-  formatPoints,
   getCategoryLabel,
   getSubcategoryLabel,
   getCategoryColor,
@@ -57,7 +56,7 @@ describe('Sanitize Utils Tests', () => {
 
   it('should sanitize strings and limit length', () => {
     expect(sanitizeString('   some string   ', 5)).toBe('some');
-    expect(sanitizeString(123 as any)).toBe('');
+    expect(sanitizeString(123 as unknown as string)).toBe('');
   });
 
   it('should sanitize emails', () => {

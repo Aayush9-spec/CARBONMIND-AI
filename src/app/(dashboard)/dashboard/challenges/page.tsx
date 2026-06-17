@@ -9,15 +9,12 @@ import {
   Target, 
   Trophy, 
   Flame, 
-  Award, 
   CheckCircle, 
   Loader2, 
-  Plus,
-  Sparkles,
-  Info
+  Plus
 } from 'lucide-react';
 import { getDashboardData } from '@/actions/carbon-actions';
-import type { DashboardData, Challenge, Achievement } from '@/types';
+import type { DashboardData, Achievement } from '@/types';
 
 const LEVEL_NAMES = {
   green_starter: 'Green Starter 🌱',
@@ -36,27 +33,33 @@ const BADGES = [
   { type: 'first_scan', title: 'Digital Adopter', desc: 'Scan your first bill receipt with OCR', icon: '📸' },
 ];
 
+function calculateDaysRemaining(endDateStr: Date | string): number {
+  return Math.max(1, Math.round((new Date(endDateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+}
+
 export default function ChallengesPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const res = await getDashboardData();
-      if (res.success && res.data) {
-        setData(res.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadData();
+    let active = true;
+    const load = async () => {
+      try {
+        const res = await getDashboardData();
+        if (res.success && res.data && active) {
+          setData(res.data);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleCompleteChallenge = async (id: string) => {
@@ -247,7 +250,7 @@ export default function ChallengesPage() {
 
                       <div className="flex items-center justify-between border-t border-white/5 pt-3 mt-1">
                         <span className="text-[10px] text-gray-500 font-semibold uppercase">
-                          Time remaining: {Math.max(1, Math.round((new Date(challenge.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days
+                          Time remaining: {calculateDaysRemaining(challenge.endDate)} days
                         </span>
                         <button
                           onClick={() => handleCompleteChallenge(challenge.id)}
@@ -264,7 +267,7 @@ export default function ChallengesPage() {
                   <div className="flex flex-col items-center justify-center text-center h-full py-12 text-gray-500 space-y-2">
                     <Target className="h-10 w-10 text-gray-600 animate-pulse" />
                     <h3 className="font-heading font-bold text-gray-400">All caught up!</h3>
-                    <p className="text-xs max-w-xs leading-normal">You have completed all active challenges. Join a new one by clicking 'Join Next Challenge' above.</p>
+                    <p className="text-xs max-w-xs leading-normal">You have completed all active challenges. Join a new one by clicking &apos;Join Next Challenge&apos; above.</p>
                   </div>
                 )}
               </div>
