@@ -91,6 +91,7 @@ export default function CarbonDNAPage() {
   const [dna, setDna] = useState<CarbonDNA | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const [isPending, startTransition] = useTransition();
 
@@ -123,6 +124,9 @@ export default function CarbonDNAPage() {
   };
 
   useEffect(() => {
+    setTimeout(() => {
+      setMounted(true);
+    }, 0);
     let active = true;
     const load = async () => {
       try {
@@ -478,11 +482,11 @@ export default function CarbonDNAPage() {
                           role="row"
                         >
                           <td className="py-3.5 px-4 text-gray-300 font-medium">
-                            {new Date(act.activityDate).toLocaleDateString('en-US', {
+                            {mounted ? new Date(act.activityDate).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric'
-                            })}
+                            }) : new Date(act.activityDate).toISOString().split('T')[0]}
                           </td>
                           <td className="py-3.5 px-4 capitalize">
                             <span
@@ -507,7 +511,7 @@ export default function CarbonDNAPage() {
                               onClick={() => handleDelete(act.id)}
                               className="rounded p-1 text-gray-500 hover:bg-red-500/15 hover:text-red-400 transition"
                               title="Delete entry"
-                              aria-label={`Delete ${act.subcategory} log on ${new Date(act.activityDate).toLocaleDateString()}`}
+                              aria-label={mounted ? `Delete ${act.subcategory} log on ${new Date(act.activityDate).toLocaleDateString()}` : `Delete ${act.subcategory} log`}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>

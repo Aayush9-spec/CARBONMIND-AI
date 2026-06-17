@@ -25,8 +25,12 @@ export default function ForecastPage() {
   const [forecast, setForecast] = useState<ForecastResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [reloadTrigger, setReloadTrigger] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setTimeout(() => {
+      setMounted(true);
+    }, 0);
     let active = true;
     const load = async () => {
       try {
@@ -213,7 +217,7 @@ export default function ForecastPage() {
                         style={{ fontSize: '12px' }}
                         tickFormatter={(str) => {
                           const date = new Date(str);
-                          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                          return mounted ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : str;
                         }}
                       />
                       <YAxis 
@@ -227,7 +231,7 @@ export default function ForecastPage() {
                           borderColor: 'rgba(255,255,255,0.08)',
                           borderRadius: '8px'
                         }}
-                        labelFormatter={(str) => new Date(str).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                        labelFormatter={(str) => mounted ? new Date(str).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : str}
                       />
                       <Area 
                         type="monotone" 

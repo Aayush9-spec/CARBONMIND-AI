@@ -24,14 +24,16 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
-  const [reportDateRange] = useState(() => {
-    const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
-    const end = new Date().toLocaleDateString();
-    return `Week of ${start} – ${end}`;
-  });
+  const [reportDateRange, setReportDateRange] = useState('Week of...');
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setTimeout(() => {
+      const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString();
+      const end = new Date().toLocaleDateString();
+      setReportDateRange(`Week of ${start} – ${end}`);
+    }, 0);
+
     const loadData = async () => {
       try {
         setLoading(true);
