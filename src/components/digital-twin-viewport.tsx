@@ -71,7 +71,6 @@ export default function DigitalTwinViewport({ carbonDNA }: DigitalTwinProps) {
               </linearGradient>
             </defs>
             <rect width="240" height="180" rx="12" fill="url(#skyGrad)" />
-            <grid />
 
             {/* Sun / Sky Solar status */}
             <circle cx="190" cy="40" r="18" fill="url(#sunGrad)" className="animate-pulse" />

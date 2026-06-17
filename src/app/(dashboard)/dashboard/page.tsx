@@ -101,6 +101,7 @@ const leaderboard = [
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -120,12 +121,12 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadTrigger]);
 
   const carbonScore = data?.carbonScore ?? 72;
   const monthlyEmissions = data?.carbonDNA.total ?? 245.8;
   const changePercent = -8.3;
-  const activeStreak = data?.gamification.streak ?? 12;
+  const activeStreak = data?.gamification.currentStreak ?? 12;
   const activeLevel = data?.gamification.level ?? 'Eco Explorer';
 
   const carbonDNAParam = data?.carbonDNA
@@ -252,7 +253,7 @@ export default function DashboardPage() {
           <div>
             <p className="text-sm text-gray-400">Level</p>
             <p className="text-xl font-bold text-white capitalize">{activeLevel.replace('_', ' ')}</p>
-            <p className="text-xs text-gray-500">{data?.gamification.points ?? 450} pts</p>
+            <p className="text-xs text-gray-500">{data?.gamification.totalPoints ?? 450} pts</p>
           </div>
         </div>
       </div>
@@ -262,7 +263,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <BudgetAlerts currentMonthly={monthlyEmissions} />
-        <AutomationSync onActivitySynced={loadDashboard} />
+        <AutomationSync onActivitySynced={() => setReloadTrigger(prev => prev + 1)} />
       </div>
 
       {/* ── Middle Row: Forecast ──────────────────────────────── */}
