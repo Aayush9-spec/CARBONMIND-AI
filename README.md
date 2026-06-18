@@ -36,7 +36,7 @@ The system utilizes modular architecture dividing frontend display layers from b
 5. **AI Climate Coach**: A dynamic chat interface where users can ask questions (e.g., about diet footprint changes) and receive suggestions.
 6. **PDF Reporting**: Users click "Export Weekly PDF" to capture report widgets and download a clean carbon ledger.
 
----
+--- 
 
 ## 4. Key Assumptions Made
 
