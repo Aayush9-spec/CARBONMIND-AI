@@ -32,7 +32,7 @@ graph TD
     F & G & H -->|Unified Payload| I[Carbon Mission Control Dashboard]
 ```
 
----
+--- 
 
 ## 3. High-Grade Features Implemented
 
