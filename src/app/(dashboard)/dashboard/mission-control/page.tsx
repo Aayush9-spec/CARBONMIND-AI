@@ -73,6 +73,16 @@ export default function MissionControlPage() {
   // Compute stats
   const totalForecastedEmissions = forecast.reduce((sum, f) => sum + f.predicted, 0);
   const averageConfidence = recommendations.reduce((sum, r) => sum + r.confidence, 0) / Math.max(recommendations.length, 1);
+  const forecastRange = forecast.length > 0
+    ? Math.max(...forecast.map((point) => point.highBound)) - Math.min(...forecast.map((point) => point.lowBound))
+    : 0;
+  const highestImpactRecommendation = recommendations.reduce<ExplainableRecommendation | null>(
+    (best, recommendation) => {
+      if (!best) return recommendation;
+      return Math.abs(recommendation.impact) > Math.abs(best.impact) ? recommendation : best;
+    },
+    null
+  );
 
   return (
     <div className="space-y-6">
@@ -166,14 +176,14 @@ export default function MissionControlPage() {
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Twin Simulation Status</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">Forecast Notes</h3>
               <div className="flex items-center gap-3 bg-gray-950/45 p-3 rounded-lg border border-gray-800">
                 <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0" />
-                <span className="text-xs text-gray-300">Holt-Winters predictive smoothing running at optimal parameters.</span>
+                <span className="text-xs text-gray-300">Forecasts are generated from your logged history and widen in range as the projection horizon extends.</span>
               </div>
               <div className="flex items-center gap-3 bg-gray-950/45 p-3 rounded-lg border border-gray-800">
                 <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0" />
-                <span className="text-xs text-gray-300">Model synchronization factor: 98.4% accuracy baseline.</span>
+                <span className="text-xs text-gray-300">Current 14-day forecast band spans roughly {forecastRange.toFixed(1)} kg CO₂e between low and high estimates.</span>
               </div>
             </div>
           </div>
@@ -197,7 +207,7 @@ export default function MissionControlPage() {
                   <h3 className="text-sm font-semibold text-indigo-300">Explainable Model Insights</h3>
                 </div>
                 <p className="text-xs text-gray-300 leading-relaxed">
-                  Our neural-equivalent model maps your daily activities to regional grid emissions factors. The recommendations show exactly *why* they were picked based on your logs.
+                  Recommendations are derived from your logged activity mix and include an audit trace so you can see which categories are driving each suggestion.
                 </p>
               </div>
 
@@ -207,7 +217,7 @@ export default function MissionControlPage() {
                   <h3 className="text-sm font-semibold text-emerald-300">Action Plan Target</h3>
                 </div>
                 <p className="text-xs text-gray-300 leading-relaxed">
-                  Completing the recommended mitigation actions will decrease your Carbon Risk Score by up to <strong className="text-emerald-400">35 points</strong>.
+                  Your highest-impact recommendation could reduce emissions by up to <strong className="text-emerald-400">{highestImpactRecommendation ? Math.abs(highestImpactRecommendation.impact).toFixed(1) : '0.0'} kg CO₂e</strong> per month based on your current data.
                 </p>
               </div>
             </div>

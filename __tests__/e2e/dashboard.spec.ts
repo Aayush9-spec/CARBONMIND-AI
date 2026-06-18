@@ -24,4 +24,25 @@ test.describe('CARBONMIND AI - Landing & Auth Flows', () => {
     const nameInput = page.locator('input[type="text"]');
     await expect(nameInput).toBeVisible();
   });
+
+  test('should redirect protected dashboard requests to login', async ({ page }) => {
+    await page.goto('/dashboard');
+    await expect(page).toHaveURL(/\/login\?callbackUrl=%2Fdashboard/);
+    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
+  });
+
+  test('should expose basic password guidance on the registration form', async ({ page }) => {
+    await page.goto('/register');
+    await expect(page.getByText(/at least 8 characters with uppercase, lowercase, and a number/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /create account/i })).toBeVisible();
+  });
+
+  test('should preserve keyboard-friendly access to auth actions', async ({ page }) => {
+    await page.goto('/login');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#login-email')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#login-password')).toBeFocused();
+  });
 });

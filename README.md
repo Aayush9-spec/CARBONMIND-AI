@@ -97,6 +97,40 @@ Frames the assistant as a climate digital twin: encouraging, contextual, and foc
 
 ---
 
+## 8. Why This Is Practical
+
+CarbonMind AI is built around decisions a real user can actually make:
+
+*   log daily activities without needing a complex enterprise setup
+*   understand which part of their lifestyle is driving emissions
+*   test lower-carbon scenarios before changing behavior
+*   get transparent recommendations tied to their own activity history
+
+The assistant is intentionally explainable. Instead of only displaying a score, it shows risk triggers, forecast ranges, and recommendation traces so users can connect the output to their own behavior.
+
+---
+
+## 9. Validation & Accessibility
+
+### Core validation
+
+```bash
+npm run test
+npm run test:e2e
+npm run lint
+npm run build
+```
+
+### Accessibility checks built into the UI
+
+*   skip-to-content navigation in the root layout
+*   keyboard focus support across auth forms and dashboard controls
+*   error alerts announced with `aria-live`
+*   descriptive labels for icon-only actions and interactive sections
+*   reduced ambiguity in charts, recommendations, and activity logs through text summaries
+
+---
+
 ## 🚀 Getting Started
 
 ### 1. Configure Environment Variables
