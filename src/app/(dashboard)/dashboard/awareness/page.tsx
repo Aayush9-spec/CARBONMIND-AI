@@ -202,7 +202,7 @@ export default function AwarenessPage() {
 
                     <button
                       onClick={() => setActiveModule(isExpanded ? null : mod.id)}
-                      aria-expanded={isExpanded}
+                      aria-expanded={isExpanded ? 'true' : 'false'}
                       aria-controls={`mod-content-${mod.id}`}
                       className="mt-3 text-xs font-semibold text-indigo-400 hover:text-indigo-300 focus:outline-none"
                     >

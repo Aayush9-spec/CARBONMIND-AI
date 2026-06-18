@@ -272,7 +272,7 @@ export default function MissionControlPage() {
                 <div className="mt-4 pt-4 border-t border-gray-800/80">
                   <button
                     onClick={() => setActiveRecommendationTab(isExpanded ? null : rec.id)}
-                    aria-expanded={isExpanded}
+                    aria-expanded={isExpanded ? 'true' : 'false'}
                     aria-controls={`exp-${rec.id}`}
                     className="text-xs font-medium text-indigo-400 hover:text-indigo-300 flex items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-1.5 py-0.5"
                   >

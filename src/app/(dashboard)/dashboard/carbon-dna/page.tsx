@@ -220,7 +220,7 @@ export default function CarbonDNAPage() {
         <button
           onClick={() => setShowForm(!showForm)}
           className="gradient-primary flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition-all duration-300 hover:opacity-90 active:scale-95"
-          aria-expanded={showForm}
+          aria-expanded={showForm ? 'true' : 'false'}
           aria-controls="activity-form-container"
         >
           {showForm ? 'Cancel Entry' : 'Log New Activity'}
