@@ -97,14 +97,15 @@ export default function ReportPage() {
           <button
             onClick={handleExportPDF}
             disabled={exporting}
-            className="gradient-primary flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition hover:opacity-90 active:scale-95 disabled:opacity-50"
+            aria-label="Export Weekly PDF Report"
+            className="gradient-primary flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition hover:opacity-90 active:scale-95 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {exporting ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             ) : exportSuccess ? (
-              <Check className="h-5 w-5" />
+              <Check className="h-5 w-5" aria-hidden="true" />
             ) : (
-              <Download className="h-5 w-5" />
+              <Download className="h-5 w-5" aria-hidden="true" />
             )}
             {exporting ? 'Generating PDF...' : exportSuccess ? 'Report Downloaded!' : 'Export Weekly PDF'}
           </button>
@@ -182,16 +183,16 @@ export default function ReportPage() {
               {/* Emissions breakdown list */}
               <div className="space-y-4">
                 <h3 className="font-heading text-lg font-bold text-white">Sector Contribution Analysis</h3>
-                <div className="space-y-3">
+                <div className="space-y-3" role="list" aria-label="Emissions contribution by category">
                   {[
                     { name: 'Transportation', pct: data.carbonDNA.transport, color: '#3b82f6' },
                     { name: 'Food & Diet', pct: data.carbonDNA.food, color: '#f59e0b' },
                     { name: 'Home Energy', pct: data.carbonDNA.energy, color: '#ef4444' },
                     { name: 'Shopping & Goods', pct: data.carbonDNA.shopping, color: '#8b5cf6' },
                   ].map((sector) => (
-                    <div key={sector.name} className="flex items-center justify-between text-sm">
+                    <div key={sector.name} role="listitem" className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-gray-300">
-                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: sector.color }} />
+                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: sector.color }} aria-hidden="true" />
                         <span>{sector.name}</span>
                       </div>
                       <span className="font-bold text-white">{sector.pct}%</span>
