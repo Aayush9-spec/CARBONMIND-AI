@@ -57,6 +57,32 @@ describe('Forecasting Engine Tests', () => {
     expect(result.confidence).toBeGreaterThan(0);
     expect(['increasing', 'decreasing', 'stable']).toContain(result.trend);
   });
+
+  it('should widen forecast confidence bounds as the horizon increases', () => {
+    const mockActivities: CarbonActivity[] = [];
+    for (let i = 0; i < 14; i++) {
+      mockActivities.push({
+        id: `forecast-${i}`,
+        userId: 'user-1',
+        category: 'energy',
+        subcategory: 'electricity',
+        value: 50 + i,
+        unit: 'kWh',
+        emissionKg: 20 + i,
+        source: 'manual',
+        confidence: 1.0,
+        metadata: {},
+        activityDate: new Date(new Date('2026-06-01').getTime() + i * 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+      });
+    }
+
+    const forecast = predictFutureEmissions(mockActivities, 7);
+    const firstRange = forecast[0].highBound - forecast[0].lowBound;
+    const lastRange = forecast[6].highBound - forecast[6].lowBound;
+
+    expect(lastRange).toBeGreaterThan(firstRange);
+  });
 });
 
 describe('Gamification Engine Tests', () => {
@@ -173,12 +199,40 @@ describe('Carbon AI Prediction & Risk Analytics Engine Tests', () => {
     expect(recs[0].confidence).toBeGreaterThan(0);
   });
 
+  it('should provide fallback recommendations when no activity data exists', () => {
+    const recs = generateExplainableRecommendations([]);
+    expect(recs.length).toBeGreaterThanOrEqual(3);
+    expect(recs.every((rec) => rec.explanation.length > 0)).toBe(true);
+  });
+
   it('should calculate Carbon Risk Score and flag triggers', () => {
     const risk = calculateCarbonRiskScore(mockActivities, 150);
     expect(risk.riskScore).toBeGreaterThanOrEqual(0);
     expect(risk.riskScore).toBeLessThanOrEqual(100);
     expect(['low', 'medium', 'high']).toContain(risk.riskLevel);
     expect(risk.factors.length).toBeGreaterThan(0);
+  });
+
+  it('should classify high-risk users when emissions greatly exceed budget', () => {
+    const highRiskActivities: CarbonActivity[] = Array.from({ length: 5 }, (_, i) => ({
+      id: `high-risk-${i}`,
+      userId: 'user-1',
+      category: 'transport',
+      subcategory: 'car_gasoline',
+      value: 80,
+      unit: 'km',
+      emissionKg: 40,
+      source: 'manual',
+      confidence: 1.0,
+      metadata: {},
+      activityDate: new Date(),
+      createdAt: new Date(),
+    }));
+
+    const risk = calculateCarbonRiskScore(highRiskActivities, 100);
+    expect(risk.riskLevel).toBe('high');
+    expect(risk.riskScore).toBeGreaterThan(70);
+    expect(risk.factors.some((factor) => factor.title.includes('Allowance'))).toBe(true);
   });
 });
 

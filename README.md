@@ -55,6 +55,48 @@ graph TD
 
 ---
 
+## 5. Approach & Logic
+
+CarbonMind AI is designed as a practical sustainability assistant rather than a static calculator. The core product loop is:
+
+1. Users log activities across transport, food, energy, and shopping.
+2. The platform converts those activities into estimated emissions using category-specific factors.
+3. Historical logs are aggregated into a personal "Carbon DNA" profile that highlights dominant emission sources.
+4. Forecasting and risk engines project likely future emissions and identify overspending patterns against a monthly budget.
+5. The assistant turns those signals into explainable recommendations, simulations, and progress-oriented coaching.
+
+This keeps the assistant context-aware: recommendations change based on the user's own history, activity mix, and current carbon risk.
+
+---
+
+## 6. How The Solution Works
+
+### Carbon DNA
+Builds a per-user footprint profile by aggregating logged activity data and identifying the dominant emission category.
+
+### Forecasting
+Uses time-series style smoothing and trend analysis to estimate future emissions with confidence bands.
+
+### Mission Control
+Combines forecast output, risk scoring, and explainable recommendations in a single decision dashboard.
+
+### Simulator
+Lets users run "what-if" scenarios such as reduced driving or lower electricity usage to see projected savings before changing behavior.
+
+### AI Coach Persona
+Frames the assistant as a climate digital twin: encouraging, contextual, and focused on realistic next steps instead of generic advice.
+
+---
+
+## 7. Assumptions
+
+*   Users will regularly log enough activity data for trend and forecast quality to improve over time.
+*   Emission factors are modeled as reasonable approximations for awareness and decision support, not legal-grade audit outputs.
+*   Authentication, persistence, and dashboard analytics are intended for an individual user flow in a public demo or hackathon setting.
+*   OCR, forecasting, and AI-driven guidance are designed to support practical carbon-awareness use cases, even when some inputs are incomplete.
+
+---
+
 ## 🚀 Getting Started
 
 ### 1. Configure Environment Variables
@@ -83,7 +125,7 @@ npm run build
 npm run test
 
 # Run Playwright E2E browser tests
-npx playwright test
+npm run test:e2e
 ```
 
 ### 4. Run Development Server

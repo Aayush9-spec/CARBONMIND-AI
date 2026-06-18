@@ -5,6 +5,7 @@
 // =============================================================================
 
 import type { CarbonActivity, ForecastPoint, ForecastResult, ForecastPeriod } from '@/types';
+import { aggregateDailyEmissions } from '@/utils/carbon';
 
 /**
  * Generate emission forecast for 30, 60, or 90 days.
@@ -75,27 +76,6 @@ export function generateForecast(
     aiExplanation: '', // Filled by AI service
     trend: changePercent > 2 ? 'increasing' : changePercent < -2 ? 'decreasing' : 'stable',
   };
-}
-
-/**
- * Aggregate activities into daily emission totals.
- */
-function aggregateDailyEmissions(activities: CarbonActivity[]): number[] {
-  if (activities.length === 0) return [];
-
-  // Sort by date
-  const sorted = [...activities].sort(
-    (a, b) => new Date(a.activityDate).getTime() - new Date(b.activityDate).getTime()
-  );
-
-  const dailyMap = new Map<string, number>();
-
-  for (const activity of sorted) {
-    const dateKey = new Date(activity.activityDate).toISOString().split('T')[0];
-    dailyMap.set(dateKey, (dailyMap.get(dateKey) ?? 0) + activity.emissionKg);
-  }
-
-  return Array.from(dailyMap.values());
 }
 
 /**

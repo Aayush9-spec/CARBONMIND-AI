@@ -32,7 +32,7 @@ npm run test
 ### 2. Run E2E Integration Tests (Playwright)
 Playwright spins up headless browser environments (Chromium, Firefox, WebKit) to validate route access, login forms, and interaction states:
 ```bash
-npx playwright test
+npm run test:e2e
 ```
 
 ---

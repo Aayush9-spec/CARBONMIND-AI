@@ -18,6 +18,11 @@ import {
   isAllowedMimeType,
   sanitizeObject
 } from '@/utils/sanitize';
+import {
+  sortActivitiesChronologically,
+  aggregateDailyEmissions
+} from '@/utils/carbon';
+import type { CarbonActivity } from '@/types';
 
 describe('Format Utils Tests', () => {
   it('should format emissions correctly based on range', () => {
@@ -88,5 +93,73 @@ describe('Sanitize Utils Tests', () => {
     const clean = sanitizeObject(dirtyObj);
     expect(clean.name).toBe('John');
     expect(clean.age).toBe(30);
+  });
+});
+
+describe('Carbon Utils Tests', () => {
+  const mockActivities: CarbonActivity[] = [
+    {
+      id: 'act-2',
+      userId: 'user-1',
+      category: 'transport',
+      subcategory: 'car_gasoline',
+      value: 15,
+      unit: 'km',
+      emissionKg: 3.15,
+      source: 'manual',
+      confidence: 1.0,
+      metadata: {},
+      activityDate: new Date('2026-06-02'),
+      createdAt: new Date(),
+    },
+    {
+      id: 'act-1',
+      userId: 'user-1',
+      category: 'energy',
+      subcategory: 'electricity',
+      value: 120,
+      unit: 'kWh',
+      emissionKg: 25.2,
+      source: 'manual',
+      confidence: 1.0,
+      metadata: {},
+      activityDate: new Date('2026-06-01'),
+      createdAt: new Date(),
+    },
+    {
+      id: 'act-3',
+      userId: 'user-1',
+      category: 'transport',
+      subcategory: 'car_gasoline',
+      value: 10,
+      unit: 'km',
+      emissionKg: 2.1,
+      source: 'manual',
+      confidence: 1.0,
+      metadata: {},
+      activityDate: new Date('2026-06-02'),
+      createdAt: new Date(),
+    }
+  ];
+
+  it('should sort activities chronologically', () => {
+    const sorted = sortActivitiesChronologically(mockActivities);
+    expect(sorted.length).toBe(3);
+    expect(sorted[0].id).toBe('act-1');
+    expect(sorted[1].id).toBe('act-2');
+    expect(sorted[2].id).toBe('act-3');
+  });
+
+  it('should aggregate daily emissions chronologically', () => {
+    const daily = aggregateDailyEmissions(mockActivities);
+    expect(daily.length).toBe(2);
+    // 2026-06-01 total: 25.2
+    expect(daily[0]).toBe(25.2);
+    // 2026-06-02 total: 3.15 + 2.1 = 5.25
+    expect(daily[1]).toBe(5.25);
+  });
+
+  it('should return empty array for aggregateDailyEmissions if activities is empty', () => {
+    expect(aggregateDailyEmissions([])).toEqual([]);
   });
 });

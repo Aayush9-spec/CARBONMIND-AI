@@ -91,7 +91,6 @@ export default function CarbonDNAPage() {
   const [dna, setDna] = useState<CarbonDNA | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
 
   const [isPending, startTransition] = useTransition();
 
@@ -107,6 +106,7 @@ export default function CarbonDNAPage() {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await getActivities();
       if (res.success && res.data) {
         setActivities(res.data);
@@ -124,31 +124,32 @@ export default function CarbonDNAPage() {
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-    }, 0);
     let active = true;
-    const load = async () => {
+    void (async () => {
       try {
+        setError(null);
         const res = await getActivities();
-        if (res.success && res.data && active) {
+        if (!active) return;
+
+        if (res.success && res.data) {
           setActivities(res.data);
           const computedDna = calculateCarbonDNA(res.data);
           computedDna.aiExplanation = generateDNAExplanation(computedDna);
           setDna(computedDna);
-          setLoading(false);
-        } else if (res.error && active) {
-          setError(res.error);
-          setLoading(false);
+        } else {
+          setError(res.error ?? 'Failed to load carbon activities');
         }
       } catch (err) {
         if (active) {
           setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+        }
+      } finally {
+        if (active) {
           setLoading(false);
         }
       }
-    };
-    load();
+    })();
+
     return () => {
       active = false;
     };

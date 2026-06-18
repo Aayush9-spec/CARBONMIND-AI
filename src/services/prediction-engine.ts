@@ -3,6 +3,7 @@
 // =============================================================================
 
 import type { CarbonActivity, CarbonCategory, Difficulty } from '@/types';
+import { sortActivitiesChronologically, aggregateDailyEmissions } from '@/utils/carbon';
 
 export interface ForecastPoint {
   date: string;
@@ -34,6 +35,14 @@ export interface RiskScoreResult {
   factors: RiskFactor[];
 }
 
+function roundToTwo(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function toIsoDate(value: Date): string {
+  return value.toISOString().split('T')[0];
+}
+
 /**
  * Carbon Digital Twin engine that models historical user log frequency and
  * emission values to predict future emissions using a Holt-Winters style double exponential smoothing.
@@ -45,7 +54,7 @@ export function predictFutureEmissions(activities: CarbonActivity[], daysAhead: 
       const d = new Date();
       d.setDate(d.getDate() + i + 1);
       return {
-        date: d.toISOString().split('T')[0],
+        date: toIsoDate(d),
         predicted: 6.5,
         lowBound: 5.0,
         highBound: 8.0,
@@ -54,17 +63,11 @@ export function predictFutureEmissions(activities: CarbonActivity[], daysAhead: 
   }
 
   // Sort activities chronologically
-  const sorted = [...activities].sort((a, b) => a.activityDate.getTime() - b.activityDate.getTime());
+  const sorted = sortActivitiesChronologically(activities);
 
   // Aggregate daily emissions
-  const dailyEmissions: Record<string, number> = {};
-  sorted.forEach((act) => {
-    const dayKey = act.activityDate.toISOString().split('T')[0];
-    dailyEmissions[dayKey] = (dailyEmissions[dayKey] || 0) + act.emissionKg;
-  });
+  const dailyValues = aggregateDailyEmissions(activities);
 
-  const dailyValues = Object.values(dailyEmissions);
-  
   // Calculate average daily emission as baseline
   const avgEmission = dailyValues.reduce((sum, v) => sum + v, 0) / Math.max(dailyValues.length, 1);
 
@@ -94,10 +97,10 @@ export function predictFutureEmissions(activities: CarbonActivity[], daysAhead: 
     const variance = (i * 0.15) * avgEmission; // Expand bounds as prediction horizon deepens
 
     result.push({
-      date: targetDate.toISOString().split('T')[0],
-      predicted: Math.round(prediction * 100) / 100,
-      lowBound: Math.round(Math.max(0, prediction - variance) * 100) / 100,
-      highBound: Math.round((prediction + variance) * 100) / 100,
+      date: toIsoDate(targetDate),
+      predicted: roundToTwo(prediction),
+      lowBound: roundToTwo(Math.max(0, prediction - variance)),
+      highBound: roundToTwo(prediction + variance),
     });
   }
 
@@ -117,7 +120,7 @@ export function generateExplainableRecommendations(activities: CarbonActivity[])
   };
 
   activities.forEach((act) => {
-    categoryTotals[act.category] = (categoryTotals[act.category] || 0) + act.emissionKg;
+    categoryTotals[act.category] += act.emissionKg;
   });
 
   const totalEmissions = Object.values(categoryTotals).reduce((sum, v) => sum + v, 0);
@@ -190,8 +193,9 @@ export function generateExplainableRecommendations(activities: CarbonActivity[])
  * Calculates risk index (0 to 100) and extracts risk factors.
  */
 export function calculateCarbonRiskScore(activities: CarbonActivity[], monthlyBudgetKg: number = 250): RiskScoreResult {
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
 
   const currentMonthActivities = activities.filter((act) => {
     const d = act.activityDate;

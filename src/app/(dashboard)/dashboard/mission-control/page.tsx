@@ -5,10 +5,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Sparkles, 
-  AlertTriangle, 
-  TrendingDown, 
+import {
+  Sparkles,
+  AlertTriangle,
+  TrendingDown,
   HelpCircle,
   CheckCircle,
   Activity,
@@ -17,10 +17,10 @@ import {
   Loader2
 } from 'lucide-react';
 import { getDashboardData } from '@/actions/carbon-actions';
-import { 
-  predictFutureEmissions, 
-  generateExplainableRecommendations, 
-  calculateCarbonRiskScore 
+import {
+  predictFutureEmissions,
+  generateExplainableRecommendations,
+  calculateCarbonRiskScore
 } from '@/services/prediction-engine';
 import type { DashboardData } from '@/types';
 import type { ForecastPoint, ExplainableRecommendation, RiskScoreResult } from '@/services/prediction-engine';
@@ -30,31 +30,31 @@ export default function MissionControlPage() {
   const [loading, setLoading] = useState(true);
   const [activeRecommendationTab, setActiveRecommendationTab] = useState<string | null>(null);
 
-  // Client-safe mounting flags for hydration matching
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-    }, 0);
+    let active = true;
 
-    const loadData = async () => {
+    void (async () => {
       try {
         setLoading(true);
         const res = await getDashboardData();
-        if (res.success && res.data) {
+        if (active && res.success && res.data) {
           setDbData(res.data);
         }
       } catch (err) {
         console.error('Failed to load mission control data:', err);
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
+    })();
+
+    return () => {
+      active = false;
     };
-    loadData();
   }, []);
 
-  if (!mounted || loading) {
+  if (loading) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-emerald-500" />
@@ -65,7 +65,7 @@ export default function MissionControlPage() {
 
   // Calculate prediction and scoring models dynamically using client-side engine with DB data
   const activities = dbData?.recentActivities || [];
-  
+
   const forecast: ForecastPoint[] = predictFutureEmissions(activities, 14);
   const recommendations: ExplainableRecommendation[] = generateExplainableRecommendations(activities);
   const riskResult: RiskScoreResult = calculateCarbonRiskScore(activities, 250);
@@ -89,9 +89,9 @@ export default function MissionControlPage() {
 
       {/* ── Dashboard Grid ── */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        
+
         {/* ── CARD 1: Risk score ── */}
-        <section 
+        <section
           aria-labelledby="risk-score-heading"
           className="border-glow bg-card-dark rounded-xl p-6 flex flex-col justify-between"
         >
@@ -101,11 +101,10 @@ export default function MissionControlPage() {
                 <ShieldAlert className="h-5 w-5 text-rose-400" />
                 Carbon Risk Assessment
               </h2>
-              <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${
-                riskResult.riskLevel === 'high' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/35' :
-                riskResult.riskLevel === 'medium' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/35' :
-                'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35'
-              }`}>
+              <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${riskResult.riskLevel === 'high' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/35' :
+                  riskResult.riskLevel === 'medium' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/35' :
+                    'bg-emerald-500/20 text-emerald-300 border border-emerald-500/35'
+                }`}>
                 {riskResult.riskLevel.toUpperCase()} RISK
               </span>
             </div>
@@ -113,8 +112,8 @@ export default function MissionControlPage() {
             {/* Dial visual */}
             <div className="flex flex-col items-center justify-center my-6">
               <div className="relative flex items-center justify-center h-32 w-32 rounded-full border-4 border-gray-800">
-                <div 
-                  className="absolute inset-0 rounded-full border-4 border-transparent border-t-rose-500 animate-spin-slow" 
+                <div
+                  className="absolute inset-0 rounded-full border-4 border-transparent border-t-rose-500 animate-spin-slow"
                   style={{ transform: `rotate(${riskResult.riskScore * 3.6}deg)` }}
                 />
                 <div className="text-center">
@@ -141,7 +140,7 @@ export default function MissionControlPage() {
         </section>
 
         {/* ── CARD 2: Forecast Projection twin ── */}
-        <section 
+        <section
           aria-labelledby="projection-heading"
           className="border-glow bg-card-dark rounded-xl p-6 flex flex-col justify-between md:col-span-1"
         >
@@ -181,7 +180,7 @@ export default function MissionControlPage() {
         </section>
 
         {/* ── CARD 3: Quick Stats and Target ── */}
-        <section 
+        <section
           aria-labelledby="twin-summary-heading"
           className="border-glow bg-card-dark rounded-xl p-6 flex flex-col justify-between md:col-span-2 lg:col-span-1"
         >
@@ -218,7 +217,7 @@ export default function MissionControlPage() {
       </div>
 
       {/* ── Explainable AI Recommendations Section ── */}
-      <section 
+      <section
         aria-labelledby="xai-recommendations-title"
         className="border-glow bg-card-dark rounded-xl p-6"
       >
@@ -241,7 +240,7 @@ export default function MissionControlPage() {
           {recommendations.map((rec) => {
             const isExpanded = activeRecommendationTab === rec.id;
             return (
-              <div 
+              <div
                 key={rec.id}
                 className="bg-gray-950/40 border border-gray-800 rounded-lg p-5 transition hover:border-gray-700"
               >
@@ -279,9 +278,9 @@ export default function MissionControlPage() {
                     {isExpanded ? 'Hide AI Explanation' : 'View AI Explanation & Audit Trace'}
                     <ArrowRight className={`h-3 w-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                   </button>
-                  
+
                   {isExpanded && (
-                    <div 
+                    <div
                       id={`exp-${rec.id}`}
                       className="mt-3 bg-indigo-950/20 border border-indigo-950/60 rounded-md p-4 text-xs text-gray-300 space-y-2"
                     >
