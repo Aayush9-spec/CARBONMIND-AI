@@ -38,11 +38,38 @@ const defaultDNA = {
   dominantCategory: 'transport' as const,
 };
 
-const forecastData = Array.from({ length: 30 }, (_, i) => ({
-  day: `Day ${i + 1}`,
-  actual: i < 15 ? Math.round(6 + Math.random() * 4) : undefined,
-  predicted: Math.round(7 + Math.sin(i / 5) * 2 + Math.random() * 2),
-}));
+const forecastData = [
+  { day: 'Day 1', actual: 8, predicted: 8 },
+  { day: 'Day 2', actual: 7, predicted: 8 },
+  { day: 'Day 3', actual: 9, predicted: 9 },
+  { day: 'Day 4', actual: 8, predicted: 9 },
+  { day: 'Day 5', actual: 7, predicted: 8 },
+  { day: 'Day 6', actual: 8, predicted: 8 },
+  { day: 'Day 7', actual: 9, predicted: 9 },
+  { day: 'Day 8', actual: 8, predicted: 9 },
+  { day: 'Day 9', actual: 7, predicted: 8 },
+  { day: 'Day 10', actual: 8, predicted: 8 },
+  { day: 'Day 11', actual: 7, predicted: 8 },
+  { day: 'Day 12', actual: 6, predicted: 7 },
+  { day: 'Day 13', actual: 7, predicted: 7 },
+  { day: 'Day 14', actual: 8, predicted: 8 },
+  { day: 'Day 15', actual: 7, predicted: 8 },
+  { day: 'Day 16', predicted: 8 },
+  { day: 'Day 17', predicted: 8 },
+  { day: 'Day 18', predicted: 9 },
+  { day: 'Day 19', predicted: 9 },
+  { day: 'Day 20', predicted: 8 },
+  { day: 'Day 21', predicted: 8 },
+  { day: 'Day 22', predicted: 7 },
+  { day: 'Day 23', predicted: 7 },
+  { day: 'Day 24', predicted: 8 },
+  { day: 'Day 25', predicted: 8 },
+  { day: 'Day 26', predicted: 9 },
+  { day: 'Day 27', predicted: 9 },
+  { day: 'Day 28', predicted: 8 },
+  { day: 'Day 29', predicted: 8 },
+  { day: 'Day 30', predicted: 7 },
+];
 
 const insights = [
   {
@@ -128,6 +155,7 @@ export default function DashboardPage() {
   const changePercent = -8.3;
   const activeStreak = data?.gamification.currentStreak ?? 12;
   const activeLevel = data?.gamification.level ?? 'Eco Explorer';
+  const hasActivityData = Boolean(data?.recentActivities.length);
 
   const carbonDNAParam = data?.carbonDNA
     ? {
@@ -283,6 +311,11 @@ export default function DashboardPage() {
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
+          {!hasActivityData && (
+            <p className="mb-4 text-xs text-gray-500">
+              Showing a sample preview until enough personal activity data has been logged for a full forecast.
+            </p>
+          )}
           <div className="h-48" aria-label="30-day emission forecast chart">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={forecastData}>
@@ -358,11 +391,16 @@ export default function DashboardPage() {
         {/* AI Insights */}
         <div className="glass-card p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">AI Insights</h2>
+            <h2 className="text-lg font-semibold text-white">{hasActivityData ? 'AI Insights' : 'Sample Insights'}</h2>
             <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-              {insights.length} new
+              {hasActivityData ? `${insights.length} new` : 'demo'}
             </span>
           </div>
+          {!hasActivityData && (
+            <p className="mb-4 text-xs text-gray-500">
+              These examples illustrate the type of recommendations the assistant will generate once personal logging data is available.
+            </p>
+          )}
           <div className="space-y-3">
             {insights.map((insight) => (
               <div
@@ -402,7 +440,7 @@ export default function DashboardPage() {
         <div className="glass-card p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">
-              Active Challenges
+              {hasActivityData ? 'Active Challenges' : 'Challenge Preview'}
             </h2>
             <Link
               href="/dashboard/challenges"
@@ -412,6 +450,11 @@ export default function DashboardPage() {
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
+          {!hasActivityData && (
+            <p className="mb-4 text-xs text-gray-500">
+              Example challenge cards are shown before live progress data is created from user activity.
+            </p>
+          )}
           <div className="space-y-4">
             {challenges.map((challenge) => (
               <div
@@ -451,7 +494,7 @@ export default function DashboardPage() {
         {/* Leaderboard */}
         <div className="glass-card p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Leaderboard</h2>
+            <h2 className="text-lg font-semibold text-white">{hasActivityData ? 'Leaderboard' : 'Community Snapshot'}</h2>
             <Link
               href="/dashboard/community"
               className="flex items-center gap-1 text-sm text-emerald-400 transition-colors hover:text-emerald-300"
@@ -460,6 +503,11 @@ export default function DashboardPage() {
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
+          {!hasActivityData && (
+            <p className="mb-4 text-xs text-gray-500">
+              This board is a sample community view included to demonstrate the social layer of the platform.
+            </p>
+          )}
           <div className="space-y-2">
             {leaderboard.map((entry) => (
               <div
