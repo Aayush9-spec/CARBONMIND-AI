@@ -3,6 +3,7 @@ import { generateForecast } from '@/services/forecasting-engine';
 import { getLevelDetails, calculateNewStreak } from '@/services/gamification';
 import { runSimulation } from '@/services/simulator-engine';
 import { predictFutureEmissions, generateExplainableRecommendations, calculateCarbonRiskScore } from '@/services/prediction-engine';
+import { QuizService } from '@/services/quiz-service';
 import type { CarbonActivity, CarbonCategory, ScenarioChange } from '@/types';
 
 describe('Forecasting Engine Tests', () => {
@@ -178,5 +179,30 @@ describe('Carbon AI Prediction & Risk Analytics Engine Tests', () => {
     expect(risk.riskScore).toBeLessThanOrEqual(100);
     expect(['low', 'medium', 'high']).toContain(risk.riskLevel);
     expect(risk.factors.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Quiz & Education Service Tests', () => {
+  const service = new QuizService();
+
+  it('should return questions and modules', () => {
+    const questions = service.getQuizQuestions();
+    const modules = service.getEducationalModules();
+    expect(questions.length).toBe(4);
+    expect(modules.length).toBe(3);
+  });
+
+  it('should grade quiz answers correctly', () => {
+    // 100% correct answers
+    const grading = service.gradeQuiz([1, 0, 1, 1]);
+    expect(grading.score).toBe(100);
+    expect(grading.passed).toBe(true);
+    expect(grading.feedback).toContain('Excellent');
+
+    // 0% correct answers
+    const badGrading = service.gradeQuiz([0, 1, 0, 0]);
+    expect(badGrading.score).toBe(0);
+    expect(badGrading.passed).toBe(false);
+    expect(badGrading.feedback).toContain('effort');
   });
 });

@@ -1,14 +1,21 @@
 // =============================================================================
 // CARBONMIND AI — Carbon Footprint Server Actions
 // =============================================================================
+/**
+ * @file carbon-actions.ts
+ * @description Serves as the routing controller/orchestration layer. Instantiates
+ * and delegates business calculations and data retrieval to Repositories and Services.
+ */
 
 'use server';
 
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { carbonActivitySchema } from '@/lib/validators/carbon';
-import { calculateActivityEmission, calculateCarbonDNA, calculateCarbonScore } from '@/services/carbon-calculator';
-import { generateForecast } from '@/services/forecasting-engine';
+import { CarbonRepository } from '@/repositories/carbon-repository';
+import { UserRepository } from '@/repositories/user-repository';
+import { CarbonService } from '@/services/carbon-service';
+import { ForecastService } from '@/services/forecast-service';
+import { QuizService } from '@/services/quiz-service';
 import { runSimulation } from '@/services/simulator-engine';
 import { calculateNewStreak, getLevelDetails } from '@/services/gamification';
 import type { 
@@ -25,10 +32,18 @@ import type {
 } from '@/types';
 import { revalidatePath } from 'next/cache';
 
+// Instantiate singletons/instances
+const carbonRepo = new CarbonRepository();
+const userRepo = new UserRepository();
+const carbonService = new CarbonService();
+const forecastService = new ForecastService();
+const quizService = new QuizService();
+
 /**
  * Helper to check authentication and return user ID.
+ * @private
  */
-async function requireAuth() {
+async function requireAuth(): Promise<string> {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error('Unauthorized');
@@ -38,6 +53,8 @@ async function requireAuth() {
 
 /**
  * Log a new carbon activity entry.
+ * Delegates storage and calculations.
+ * @param formData Raw input fields from logger form.
  */
 export async function addActivity(formData: {
   category: string;
@@ -60,59 +77,46 @@ export async function addActivity(formData: {
 
     const { category, subcategory, value, unit, activityDate } = validated.data;
 
-    // Calculate emissions
-    const { emissionKg } = calculateActivityEmission(subcategory, value);
+    // Calculate emissions via Service
+    const { emissionKg } = carbonService.calculateEmissions(subcategory, value);
 
-    // Write to database
-    const activity = await prisma.$transaction(async (tx) => {
-      // 1. Create activity
-      const newActivity = await tx.carbonActivity.create({
-        data: {
-          userId,
-          category,
-          subcategory,
-          value,
-          unit,
-          emissionKg,
-          activityDate: new Date(activityDate),
-          source: 'manual',
-          confidence: 1.0,
-        },
-      });
-
-      // 2. Update user streak, lastActiveDate, and award points
-      const user = await tx.user.findUnique({
-        where: { id: userId },
-      });
-
-      if (user) {
-        const streakResult = calculateNewStreak(
-          user.lastActiveDate,
-          user.currentStreak,
-          user.longestStreak
-        );
-
-        // Award points: 10 points per logged activity + 5 bonus points for streak increment
-        const pointsEarned = 10 + (streakResult.updated ? 5 : 0);
-        const newPoints = user.totalPoints + pointsEarned;
-        const levelDetails = getLevelDetails(newPoints);
-
-        await tx.user.update({
-          where: { id: userId },
-          data: {
-            totalPoints: newPoints,
-            level: levelDetails.level,
-            currentStreak: streakResult.streak,
-            longestStreak: streakResult.longest,
-            lastActiveDate: new Date(),
-          },
-        });
-      }
-
-      return newActivity;
+    // Save activity log via Repository
+    const activity = await carbonRepo.createActivity({
+      userId,
+      category,
+      subcategory,
+      value,
+      unit,
+      emissionKg,
+      activityDate: new Date(activityDate),
+      source: 'manual',
+      confidence: 1.0,
+      metadata: {},
     });
 
-    // Recalculate and cache user carbon DNA profile
+    // Update streak and points via User Repository
+    const user = await userRepo.findUserWithGamification(userId);
+    if (user) {
+      const streakResult = calculateNewStreak(
+        user.lastActiveDate,
+        user.currentStreak,
+        user.longestStreak
+      );
+
+      const pointsEarned = 10 + (streakResult.updated ? 5 : 0);
+      const newPoints = user.totalPoints + pointsEarned;
+      const levelDetails = getLevelDetails(newPoints);
+
+      await userRepo.updateUserMetrics(userId, {
+        totalPoints: newPoints,
+        level: levelDetails.level,
+        currentStreak: streakResult.streak,
+        longestStreak: streakResult.longest,
+        lastActiveDate: new Date(),
+      });
+    }
+
+    // Recalculate carbon profile
     await updateCarbonProfile(userId);
 
     revalidatePath('/dashboard');
@@ -134,23 +138,19 @@ export async function addActivity(formData: {
 
 /**
  * Delete a logged carbon activity.
+ * @param activityId The activity CUID.
  */
 export async function deleteActivity(activityId: string): Promise<ApiResponse<void>> {
   try {
     const userId = await requireAuth();
 
-    // Verify ownership before deleting
-    const existing = await prisma.carbonActivity.findFirst({
-      where: { id: activityId, userId },
-    });
-
-    if (!existing) {
+    // Verify ownership before deleting via Repository
+    const existing = await carbonRepo.findActivityById(activityId);
+    if (!existing || existing.userId !== userId) {
       return { success: false, error: 'Activity not found or unauthorized' };
     }
 
-    await prisma.carbonActivity.delete({
-      where: { id: activityId },
-    });
+    await carbonRepo.deleteActivity(activityId);
 
     // Update profile totals
     await updateCarbonProfile(userId);
@@ -169,11 +169,7 @@ export async function deleteActivity(activityId: string): Promise<ApiResponse<vo
 export async function getActivities(): Promise<ApiResponse<CarbonActivity[]>> {
   try {
     const userId = await requireAuth();
-
-    const activities = await prisma.carbonActivity.findMany({
-      where: { userId },
-      orderBy: { activityDate: 'desc' },
-    });
+    const activities = await carbonRepo.findAllActivities(userId);
 
     return {
       success: true,
@@ -192,57 +188,15 @@ export async function getActivities(): Promise<ApiResponse<CarbonActivity[]>> {
 }
 
 /**
- * Update aggregate carbon profile for user.
- */
-async function updateCarbonProfile(userId: string) {
-  const activities = await prisma.carbonActivity.findMany({
-    where: { userId },
-  });
-
-  const typedActivities = activities.map((a) => ({
-    ...a,
-    category: a.category as CarbonCategory,
-    subcategory: a.subcategory as Subcategory,
-    source: a.source as 'manual' | 'ocr' | 'ai_estimated',
-    metadata: (a.metadata ?? {}) as Record<string, unknown>,
-  }));
-
-  const dna = calculateCarbonDNA(typedActivities);
-
-  await prisma.carbonProfile.upsert({
-    where: { userId },
-    create: {
-      userId,
-      totalEmissions: dna.total,
-      transportPct: dna.transport,
-      foodPct: dna.food,
-      energyPct: dna.energy,
-      shoppingPct: dna.shopping,
-      monthlyAverage: dna.total,
-    },
-    update: {
-      totalEmissions: dna.total,
-      transportPct: dna.transport,
-      foodPct: dna.food,
-      energyPct: dna.energy,
-      shoppingPct: dna.shopping,
-      monthlyAverage: dna.total,
-    },
-  });
-}
-
-/**
  * Run what-if simulations dynamically using the database profile.
+ * @param changes Selected scenario modifiers.
  */
 export async function simulateScenario(
   changes: ScenarioChange[]
 ): Promise<ApiResponse<SimulationResult>> {
   try {
     const userId = await requireAuth();
-
-    const profile = await prisma.carbonProfile.findUnique({
-      where: { userId },
-    });
+    const profile = await carbonRepo.findProfileByUserId(userId);
 
     const currentEmissions = {
       transport: (profile?.totalEmissions ?? 0) * ((profile?.transportPct ?? 0) / 100),
@@ -252,13 +206,6 @@ export async function simulateScenario(
     };
 
     const simulation = runSimulation(currentEmissions, changes);
-
-    // Call OpenAI or return mock explanation if API key is not configured
-    if (process.env.OPENAI_API_KEY) {
-      // In a real app we'd query OpenAI for a personalized analysis,
-      // here we provide an intelligent default for high efficiency.
-    }
-    
     simulation.aiExplanation = `By implementing this scenario, you reduce your carbon output by ${simulation.savingsPercent}% (${simulation.savingsMonthly.toFixed(1)} kg CO₂e/month). This is equivalent to planting ${Math.round(simulation.savingsYearly / 22)} trees annually!`;
 
     return { success: true, data: simulation };
@@ -275,27 +222,14 @@ export async function getDashboardData(): Promise<ApiResponse<DashboardData>> {
   try {
     const userId = await requireAuth();
 
-    // 1. Fetch user & profile info
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        carbonProfile: true,
-        challenges: { where: { status: 'active' } },
-        achievements: true,
-      },
-    });
-
+    // 1. Fetch user info via Repository
+    const user = await userRepo.findUserWithGamification(userId);
     if (!user) {
       return { success: false, error: 'User not found' };
     }
 
-    // 2. Fetch recent activities (past 30 days)
-    const activities = await prisma.carbonActivity.findMany({
-      where: { userId },
-      orderBy: { activityDate: 'desc' },
-      take: 20,
-    });
-
+    // 2. Fetch recent activities
+    const activities = await carbonRepo.findRecentActivities(userId, 20);
     const typedActivities = activities.map((a) => ({
       ...a,
       category: a.category as CarbonCategory,
@@ -304,38 +238,26 @@ export async function getDashboardData(): Promise<ApiResponse<DashboardData>> {
       metadata: (a.metadata ?? {}) as Record<string, unknown>,
     }));
 
-    // 3. Calculate DNA profile
-    const dna = calculateCarbonDNA(typedActivities);
+    // 3. Calculate DNA profile via Service
+    const dna = carbonService.calculateDNA(typedActivities);
 
-    // 4. Generate 30-day forecast
-    const forecast = generateForecast(typedActivities, 30);
+    // 4. Generate forecast via Service
+    const forecast = forecastService.getWeightedForecast(typedActivities, 30);
 
-    // 5. Fetch leaderboard (top 5 users by reduction / points)
-    const topUsers = await prisma.user.findMany({
-      orderBy: { totalPoints: 'desc' },
-      take: 5,
-      select: {
-        id: true,
-        name: true,
-        image: true,
-        totalPoints: true,
-        currentStreak: true,
-        level: true,
-      },
-    });
-
+    // 5. Fetch leaderboard
+    const topUsers = await userRepo.findTopUsersForLeaderboard(5);
     const leaderboard = topUsers.map((u, i) => ({
       rank: i + 1,
       userId: u.id,
       name: u.name ?? 'Eco Citizen',
       image: u.image ?? undefined,
-      co2Reduced: Math.round(u.totalPoints * 0.2 * 10) / 10, // Simulated reduction metric
+      co2Reduced: Math.round(u.totalPoints * 0.2 * 10) / 10,
       challengesCompleted: Math.round(u.totalPoints / 50),
       streak: u.currentStreak,
       level: u.level as UserLevel,
     }));
 
-    // 6. Generate intelligent insights dynamically based on DNA profile
+    // 6. Generate insights
     const insights = [
       {
         id: '1',
@@ -365,8 +287,7 @@ export async function getDashboardData(): Promise<ApiResponse<DashboardData>> {
       },
     ];
 
-    // Compute Carbon Score
-    const score = calculateCarbonScore(dna.total);
+    const score = carbonService.calculateScore(dna.total);
 
     const gamification = {
       level: user.level as UserLevel,
@@ -416,4 +337,62 @@ export async function getDashboardData(): Promise<ApiResponse<DashboardData>> {
     console.error('Error fetching dashboard data:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Failed to fetch dashboard data' };
   }
+}
+
+/**
+ * Grade the literacy quiz.
+ * @param answers Array of indices of selected quiz answers.
+ */
+export async function gradeLiteracyQuiz(answers: number[]) {
+  try {
+    const result = quizService.gradeQuiz(answers);
+    
+    // Award 50 bonus points if they pass the quiz
+    if (result.passed) {
+      const userId = await requireAuth();
+      const user = await userRepo.findUserWithGamification(userId);
+      if (user) {
+        const newPoints = user.totalPoints + 50;
+        const levelDetails = getLevelDetails(newPoints);
+        await userRepo.updateUserMetrics(userId, {
+          totalPoints: newPoints,
+          level: levelDetails.level,
+          currentStreak: user.currentStreak,
+          longestStreak: user.longestStreak,
+          lastActiveDate: new Date(),
+        });
+      }
+    }
+    
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Error grading quiz:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to grade quiz' };
+  }
+}
+
+/**
+ * Update aggregate carbon profile for user.
+ * @private
+ */
+async function updateCarbonProfile(userId: string) {
+  const activities = await carbonRepo.findAllActivities(userId);
+  const typedActivities = activities.map((a) => ({
+    ...a,
+    category: a.category as CarbonCategory,
+    subcategory: a.subcategory as Subcategory,
+    source: a.source as 'manual' | 'ocr' | 'ai_estimated',
+    metadata: (a.metadata ?? {}) as Record<string, unknown>,
+  }));
+
+  const dna = carbonService.calculateDNA(typedActivities);
+
+  await carbonRepo.upsertProfile(userId, {
+    totalEmissions: dna.total,
+    transportPct: dna.transport,
+    foodPct: dna.food,
+    energyPct: dna.energy,
+    shoppingPct: dna.shopping,
+    monthlyAverage: dna.total,
+  });
 }
