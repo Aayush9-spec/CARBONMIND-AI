@@ -475,6 +475,12 @@ export default function CarbonDNAPage() {
                     activities.map((act) => {
                       const Icon = CATEGORY_ICONS[act.category as CarbonCategory] ?? Leaf;
                       const color = CATEGORY_COLORS[act.category as CarbonCategory] ?? '#10b981';
+                      const activityDate = new Date(act.activityDate);
+                      const activityDateLabel = activityDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      });
 
                       return (
                         <tr
@@ -483,11 +489,7 @@ export default function CarbonDNAPage() {
                           role="row"
                         >
                           <td className="py-3.5 px-4 text-gray-300 font-medium">
-                            {mounted ? new Date(act.activityDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            }) : new Date(act.activityDate).toISOString().split('T')[0]}
+                            {activityDateLabel}
                           </td>
                           <td className="py-3.5 px-4 capitalize">
                             <span
@@ -512,7 +514,7 @@ export default function CarbonDNAPage() {
                               onClick={() => handleDelete(act.id)}
                               className="rounded p-1 text-gray-500 hover:bg-red-500/15 hover:text-red-400 transition"
                               title="Delete entry"
-                              aria-label={mounted ? `Delete ${act.subcategory} log on ${new Date(act.activityDate).toLocaleDateString()}` : `Delete ${act.subcategory} log`}
+                              aria-label={`Delete ${act.subcategory} log on ${activityDateLabel}`}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
