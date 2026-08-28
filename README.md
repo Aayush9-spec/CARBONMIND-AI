@@ -3,7 +3,7 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](#) 
 [![Accessibility Compliance](https://img.shields.io/badge/WCAG-2.1%20AA%20Compliant-blue.svg)](./ACCESSIBILITY.md)
 [![Security Hardened](https://img.shields.io/badge/security-hardened-success.svg)](./SECURITY.md)
-[![Test Framework](https://img.shields.io/badge/test--coverage-95%25-emerald.svg)](./TESTING.md)
+[![Test Framework](https://img.shields.io/badge/test--coverage-95%25-emerald.svg)](./TESTING.md) 
 
 > **Your Personal Climate Digital Twin** — An AI-powered Carbon Footprint Awareness Platform designed to help users calculate, simulate, forecast, and reduce their greenhouse gas emissions.
 
